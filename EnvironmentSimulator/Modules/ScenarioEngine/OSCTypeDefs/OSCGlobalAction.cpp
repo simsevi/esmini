@@ -11,8 +11,10 @@
  */
 
 #include "OSCGlobalAction.hpp"
+#include "OSCSwarmTrafficGeometry.hpp"
 
 using namespace scenarioengine;
+using STGeometry::lineIntersect;
 
 void ParameterSetAction::Start()
 {
@@ -29,21 +31,65 @@ void ParameterSetAction::Step(double dt, double simTime)
 void SwarmTrafficAction::Start()
 {
 	LOG("SwarmTrafficAction Start");
+	printf("IR: %f, SMjA: %f, SMnA: %f\n", innerRadius_, semiMajorAxis_, semiMinorAxis_);
 
-	// Get handle to road network
-	roadmanager::OpenDrive* odrManager = roadmanager::Position::GetOpenDrive();
-	for (size_t i = 0; i < odrManager->GetNumOfRoads(); i++)
-	{
-		roadmanager::Road* road = odrManager->GetRoadByIdx((int)i);
-		printf("Road %d length: %.2f\n", (int)i, road->GetLength());
-	}
-
+	odrManager_ = roadmanager::Position::GetOpenDrive();
+    initRoadSegments();
 	OSCAction::Start();
 }
 
 void SwarmTrafficAction::Step(double dt, double simTime)
 {
 	LOG("SwarmTrafficAction Step");
-	printf("Central object world pos (x, y): %.2f, %.2f\n", centralObject_->pos_.GetX(), centralObject_->pos_.GetY());
-	printf("Central object road pos (roadId, s): %d, %.2f\n", centralObject_->pos_.GetTrackId(), centralObject_->pos_.GetS());
+	
+	double x1, x2, y1, y2;
+
+	roadmanager::Road* road = odrManager_->GetRoadByIdx(0);
+	roadmanager::Geometry *geometry = road->GetGeometry(0);
+
+	char sols = lineIntersect(centralObject_->pos_, static_cast<roadmanager::Line*>(geometry), semiMajorAxis_, semiMinorAxis_, &x1, &y1, &x2, &y2);
+	switch(sols) {
+        case 2: {
+		    printf("P1 = (%.2f, %.2f), P2 = (%.2f, %.2f)\n", x1, y1, x2, y2);
+		    break;
+	    }
+	    case 1: {
+		    printf("P1 = (%.2f, %.2f)\n", x1, y1);
+		    break;
+	    }
+	    default: {
+		    printf("No point detected\n");
+			break;
+	    }
+	}
 }
+
+void SwarmTrafficAction::initRoadSegments() {
+	int roadId = centralObject_->pos_.GetTrackId();
+	/* So far we have only one road, but in case of many, the intersection
+	 * with the ellipses may happen between two distinct roads
+	 */
+    front_.road = tail_.road = odrManager_->GetRoadById(roadId);
+
+	LOG("Road segments initialised correctly");
+}
+
+// Get handle to road network
+	//roadmanager::OpenDrive* odrManager = roadmanager::Position::GetOpenDrive();
+	//for (size_t i = 0; i < odrManager->GetNumOfRoads(); i++)
+	//{
+	//	roadmanager::Road* road = odrManager->GetRoadByIdx((int)i);
+	//	printf("Road %d length: %.2f\n", (int)i, road->GetLength());
+	//	for (size_t j = 0; j < road->GetNumberOfGeometries(); j++)
+	//	{
+    //       roadmanager::Geometry* geometry = road->GetGeometry(static_cast<int>(j));
+    //       printf("Road[%d], Geometry[%d]: s->%f, x->%f, y->%f, hdg->%f, l->%f\n", (int)i, (int)j, 
+	//	   geometry->GetS(), 
+	//	   geometry->GetX(), 
+	//	   geometry->GetY(),
+	//	   geometry->GetHdg(),
+	//	   geometry->GetLength());
+	//	}		
+	//}
+//printf("Central object world pos (x, y, hdg): %.2f, %.2f, %.2f\n", centralObject_->pos_.GetX(), centralObject_->pos_.GetY(), centralObject_->pos_.GetH());
+	// printf("Central object road pos (roadId, s): %d, %.2f\n", centralObject_->pos_.GetTrackId(), centralObject_->pos_.GetS());
