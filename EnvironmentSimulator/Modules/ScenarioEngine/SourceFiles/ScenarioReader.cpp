@@ -1312,8 +1312,24 @@ OSCGlobalAction *ScenarioReader::parseOSCGlobalAction(pugi::xml_node actionNode)
 			{
 				SwarmTrafficAction* trafficSwarmAction = new SwarmTrafficAction();
 
-				pugi::xml_node centralObjectNode = trafficChild.child("CentralSwarmObject");
-				trafficSwarmAction->centralObject_ = entities_->GetObjectByName(parameters.ReadAttribute(centralObjectNode, "entityRef"));
+				pugi::xml_node childNode = trafficChild.child("CentralSwarmObject");
+				trafficSwarmAction->SetCentralObject(entities_->GetObjectByName(parameters.ReadAttribute(childNode, "entityRef")));
+				//childNode = trafficChild.child("")
+
+				std::__cxx11::string radius;
+
+				// Inner radius (Circle)
+				radius = parameters.ReadAttribute(trafficChild, "innerRadius");
+				trafficSwarmAction->SetInnerRadius(std::__cxx11::stod(radius));
+                
+				// Semi major axis
+				radius = parameters.ReadAttribute(trafficChild, "semiMajorAxis");
+				trafficSwarmAction->SetSemiMajorAxes(std::__cxx11::stod(radius));
+
+				// Semi major axis
+				radius = parameters.ReadAttribute(trafficChild, "semiMinorAxis");
+				trafficSwarmAction->SetSemiMinorAxes(std::__cxx11::stod(radius));
+
 				action = trafficSwarmAction;
 			}
 		}
@@ -2385,7 +2401,7 @@ OSCCondition *ScenarioReader::parseOSCCondition(pugi::xml_node conditionNode)
 							trigger->along_route_ = false;
 						}
 
-						trigger->value_ = strtod(parameters.ReadAttribute(condition_node, "value"));
+						trigger->value_ = strtod(parameters.ReadAttribute(condition_node, "va lue"));
 						trigger->rule_ = ParseRule(parameters.ReadAttribute(condition_node, "rule"));
 
 						condition = trigger;
