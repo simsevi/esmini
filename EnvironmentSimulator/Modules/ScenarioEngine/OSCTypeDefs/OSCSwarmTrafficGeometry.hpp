@@ -120,6 +120,20 @@ namespace STGeometry {
 
     /* 
      * Finds the intersection points between an ellipses and a stright piece of the road
+     * The equation to find the x points of intersection is assumed to be in the form
+     *   A x² + Bx² + C = 0
+     * while to find the y points the line equation is used:
+     *   y = m*x + q
+     * 
+     * The ellipses is considered to have the form:
+     *   [(x - h)cos(A) + (y - k)sin(A)]²     [(x  -h)sin(A) - (y - k)cos(A)]²
+     *  ---------------------------------- + ----------------------------------
+     *                  a²                                   b²
+     * Where:
+     *   * x, y: coordinates of a point of the ellipse
+     *   * h, k: coordinates of the center of the ellipses
+     *   * A: orientation angle
+     *   * a, b: semi-major axes and semi-minor axes    
      */
     char lineIntersect(roadmanager::Position pos, roadmanager::Line *line, double SMjA, double SMnA, double* x1, double* y1, double* x2, double* y2) {
         double _A, _B, _C, delta, x0, y0, hdg, sqrt_delta, m, q, h, k;
