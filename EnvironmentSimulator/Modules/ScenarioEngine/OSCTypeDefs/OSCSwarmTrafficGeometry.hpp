@@ -125,7 +125,7 @@ namespace STGeometry {
      * while to find the y points the line equation is used:
      *   y = m*x + q
      * 
-     * The ellipses is considered to have the form:
+     * The ellipse is considered to have the form:
      *   [(x - h)cos(A) + (y - k)sin(A)]²     [(x  -h)sin(A) - (y - k)cos(A)]²
      *  ---------------------------------- + ----------------------------------
      *                  a²                                   b²
