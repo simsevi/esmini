@@ -47,7 +47,7 @@
       </Init>
       <Story name="story">
          <Act name="act">
-           <ManeuverGroup maximumExecutionCount="1" name="Swarm maneuver group">
+            <ManeuverGroup maximumExecutionCount="1" name="Swarm maneuver group">
                <Actors selectTriggeringEntities="false">
                   <EntityRef entityRef="Ego"/>
                </Actors>
@@ -56,25 +56,25 @@
                      <Action name="SwarmAction">
                         <GlobalAction>
                            <TrafficAction>
-                              <TrafficSwarmAction innerRadius="100">
-								 <CentralSwarmObject entityRef="Ego" />
+                              <TrafficSwarmAction innerRadius="100" semiMajorAxis="130" semiMinorAxis="105">
+								         <CentralSwarmObject entityRef="Ego" />
                               </TrafficSwarmAction>
                            </TrafficAction>
                         </GlobalAction>
                      </Action>
                      <StartTrigger>
-						<ConditionGroup>
-							<Condition name="StartCondition" delay="0" conditionEdge="rising">
-								 <ByValueCondition>
-									<SimulationTimeCondition value="5" rule="greaterThan"/>
-								 </ByValueCondition>
-							</Condition>
-						</ConditionGroup>					 
+						      <ConditionGroup>
+							      <Condition name="StartCondition" delay="0" conditionEdge="rising">
+								      <ByValueCondition>
+									      <SimulationTimeCondition value="5" rule="greaterThan"/>
+								      </ByValueCondition>
+							      </Condition>
+						      </ConditionGroup>					 
                      </StartTrigger>
                   </Event>
                </Maneuver>
-			</ManeuverGroup>
-        </Act>
+			   </ManeuverGroup>
+         </Act>
       </Story>
      <StopTrigger/>
    </Storyboard>
