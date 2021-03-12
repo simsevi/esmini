@@ -37,6 +37,7 @@
 #define DEMONSTRATE_THREAD 0
 #define DEMONSTRATE_CALLBACK 0
 #define DEMONSTRATE_ROAD_SIGNS 0
+#define DEMONSTRATE_OVERRIDE_ACTION 0
 
 #define MAX_N_OBJECTS 10
 #define TIME_STEP 0.017f
@@ -179,6 +180,11 @@ int main(int argc, char *argv[])
 		SE_OSIFileOpen(0);
 #endif
 
+#if DEMONSTRATE_OVERRIDE_ACTION
+		SE_OverrideActionList overrideActionList;
+		SE_GetOverrideActionStatus(0, &overrideActionList);
+		printf("Clutch value: %.2f\n", overrideActionList.clutch.value);
+#endif 
 
 		for (int i = 0; i*TIME_STEP < DURATION && !(SE_GetQuitFlag() == 1); i++)
 		{
