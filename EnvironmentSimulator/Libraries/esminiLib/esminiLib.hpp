@@ -397,10 +397,10 @@ extern "C"
 	/**
 		Get the overrideActionStatus of specified object
 		@param index Index of the object. Note: not ID
-		@param state Pointer/reference to a SE_OverrideActionList struct to be filled in
+		@param list Pointer/reference to a SE_OverrideActionList struct to be filled in
 		@return 0 if successful, -1 if not
 	*/
-	SE_DLL_API int SE_GetOverrideActionStatus(int index, SE_OverrideActionList* overrideActionList) {}
+	SE_DLL_API int SE_GetOverrideActionStatus(int index, SE_OverrideActionList* list) { return 0; }
 
 	/**
 		Get the name of specified object
