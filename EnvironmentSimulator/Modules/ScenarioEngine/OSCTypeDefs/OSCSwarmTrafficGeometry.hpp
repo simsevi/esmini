@@ -19,11 +19,6 @@ namespace STGeometry {
 #define M(hdg) tan(hdg)
 #define Q(x0, y0, hdg0) ((y0) - M(hdg) * (x0))
 #define ZERO_T 0 // SMALL_NUMBER
-#define SWAP(a, b) do { \
-    auto tmp = a;       \     
-    a = b;              \
-    b = tmp;            \
-} while(0);
 
 
     /*
@@ -92,8 +87,8 @@ namespace STGeometry {
         xmax = line->GetY();
         line->EvaluateDS(line->GetLength(), &xmax, &ymax, &hdg);
 
-        if (xmin > xmax) SWAP(xmin, xmax)
-        if (ymin > ymax) SWAP(ymin, ymax)
+        if (xmin > xmax) std::swap(xmin, xmax);
+        if (ymin > ymax) std::swap(ymin, ymax);
 
         switch (solsN) {
             case 2:
