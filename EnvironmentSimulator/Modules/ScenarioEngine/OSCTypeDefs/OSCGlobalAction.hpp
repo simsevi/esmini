@@ -15,6 +15,7 @@
 #include "OSCAction.hpp"
 #include "CommonMini.hpp"
 #include "Parameters.hpp"
+#include "Entities.hpp"
 
 namespace scenarioengine
 {
@@ -119,6 +120,7 @@ namespace scenarioengine
 		void SetInnerRadius(double innerRadius)   { innerRadius_   = innerRadius;}
 		void SetSemiMajorAxes(double axes)        { semiMajorAxis_ = axes;       }
 		void SetSemiMinorAxes(double axes)        { semiMinorAxis_ = axes;       }
+		void SetEntities(Entities* entities)      { entities_ = entities; }
 
         /*
 		void GetCentralObject() { return centralObject_; }
@@ -133,6 +135,7 @@ namespace scenarioengine
 		double innerRadius_, semiMajorAxis_, semiMinorAxis_;
 		segmentInfo front_, tail_;
 		roadmanager::OpenDrive* odrManager_;
+		Entities* entities_;
 
 		void initRoadSegments();
 	};
