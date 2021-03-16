@@ -171,4 +171,78 @@ namespace STGeometry {
         }
     }
 
+    static inline double pA(double l_hdg, double e_hdg, double SMjA, double SMnA) {
+        double cos_l, cos_e, sin_l, sin_e, f1, f2;
+        cos_l = cos(l_hdg);
+        sin_l = sin(l_hdg);
+        cos_e = cos(e_hdg);
+        sin_e = sin(e_hdg);
+
+        f1 = pow((sin_l * sin_e + cos_l * cos_e) / SMjA, 2);
+        f2 = pow((-sin_l * cos_e + cos_l * sin_e) / SMnA, 2);
+        return f1 + f1;
+    }
+
+    static inline double pB(double x0, double y0, double h, double k, double l_hdg, double e_hdg, double SMjA, double SMnA) {
+        double cos_l, cos_e, sin_l, sin_e, f1, f2;
+        cos_l = cos(l_hdg);
+        sin_l = sin(l_hdg);
+        cos_e = cos(e_hdg);
+        sin_e = sin(e_hdg);
+
+        f1 = ((x0 - h) * cos_e + (y0 - k) * sin_e) * (sin_l * sin_e + cos_l * cos_e) / pow(SMjA, 2);
+        f2 = ((x0 - h) * sin_e - (y0 - k) * cos_e) * (cos_l * sin_e - sin_l * cos_e) / pow(SMnA, 2);
+        return 2 * (f1 + f2);
+    }
+
+    static inline double pC(double x0, double y0, double h, double k, double e_hdg, double SMjA, double SMnA) {
+        double cos_e, sin_e, f1, f2;
+        cos_e = cos(e_hdg);
+        sin_e = sin(e_hdg);
+
+        f1 = pow(((x0 - h) * cos_e + (y0 - k) * sin_e) / SMjA, 2);
+        f2 = pow(((x0 - h) * sin_e - (y0 - k) * cos_e) / SMnA, 2);
+        return f1 + f2 -1;
+    }
+
+    char polarLineIntersect(roadmanager::Position pos, roadmanager::Line *line, double SMjA, double SMnA, double* s1, double *s2) {
+        double _pA, _pB, _pC, x0, y0, h, k, l_hdg, e_hdg, delta, sqrt_delta;
+
+        x0    = line->GetX();
+        y0    = line->GetY();
+        l_hdg = line->GetHdg();
+        h     = pos.GetX();
+        k     = pos.GetY();  
+        e_hdg = pos.GetH();
+
+        _pA = pA(l_hdg, e_hdg, SMjA, SMnA);
+        _pB = pB(x0, y0, h, k, l_hdg, e_hdg, SMjA, SMnA);
+        _pC = pC(x0, y0, h, k, e_hdg, SMjA, SMnA);
+
+        printf("A %.2f, B: %.2f, C: %.2f\n", _pA, _pB, _pC);
+        
+        *s1 = *s2 = 0;
+
+        delta = pow(_pB, 2) - 4 * _pA * _pC;
+        if(delta > 0) {
+            sqrt_delta = sqrt(delta);
+            *s1 = (-_pB - sqrt_delta) / (2 * _pA);
+            *s2 = (-_pB + sqrt_delta) / (2 * _pA);
+            return 2;
+        }
+        else if (delta == 0) {
+            *s1 = -_pB / (2.0 * _pA);
+            return 1;
+        }
+        else {
+            return 0;
+        }     
+    }
+
+    inline void polar2cartesian(double s, double x0, double y0, double theta, double *x, double *y) {
+        *x = x0 + s * cos(theta);
+        *y = y0 + s * sin(theta);
+        printf("COMPUTED (%.2f, %.2f)\n", *x, *y);
+    }
+
 }

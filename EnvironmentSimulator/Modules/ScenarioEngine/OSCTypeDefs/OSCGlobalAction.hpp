@@ -93,10 +93,14 @@ namespace scenarioengine
 			double             x;
 			double             y;
 		} segmentInfo;
-		
-		SwarmTrafficAction() : OSCGlobalAction(OSCGlobalAction::Type::SWARM_TRAFFIC), centralObject_(0) {};
 
-		SwarmTrafficAction(const SwarmTrafficAction& action) : OSCGlobalAction(OSCGlobalAction::Type::SWARM_TRAFFIC)
+		typedef struct {
+			segmentInfo upper, lower;
+		} curveInfo;
+		
+		SwarmTrafficAction() : OSCGlobalAction(OSCGlobalAction::Type::SWARM_TRAFFIC), centralObject_(0), i(0) {};
+
+		SwarmTrafficAction(const SwarmTrafficAction& action) : OSCGlobalAction(OSCGlobalAction::Type::SWARM_TRAFFIC), i(0)
 		{
 		}
 
@@ -131,8 +135,10 @@ namespace scenarioengine
 
 		Object* centralObject_;
 		double innerRadius_, semiMajorAxis_, semiMinorAxis_;
-		segmentInfo front_, tail_;
+		curveInfo circle_, ellipse_;
 		roadmanager::OpenDrive* odrManager_;
+		Entities entities_;
+		size_t i;
 
 		void initRoadSegments();
 	};
