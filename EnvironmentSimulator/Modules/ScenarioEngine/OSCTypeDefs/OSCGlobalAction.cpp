@@ -14,7 +14,7 @@
 #include "OSCSwarmTrafficGeometry.hpp"
 
 using namespace scenarioengine;
-using STGeometry::lineIntersect;
+using namespace STGeometry;
 
 void ParameterSetAction::Start()
 {
@@ -34,27 +34,19 @@ void SwarmTrafficAction::Start()
 	printf("IR: %f, SMjA: %f, SMnA: %f\n", innerRadius_, semiMajorAxis_, semiMinorAxis_);
 
 	odrManager_ = roadmanager::Position::GetOpenDrive();
+
     initRoadSegments();
 	OSCAction::Start();
 }
 
-void SwarmTrafficAction::Step(double dt, double simTime)
-{
-	LOG("SwarmTrafficAction Step");
-	
-	double x1, x2, y1, y2;
-
-	roadmanager::Road* road = odrManager_->GetRoadByIdx(0);
-	roadmanager::Geometry *geometry = road->GetGeometry(0);
-
-	char sols = lineIntersect(centralObject_->pos_, static_cast<roadmanager::Line*>(geometry), semiMajorAxis_, semiMinorAxis_, &x1, &y1, &x2, &y2);
+void print_sols(char sols, double x1, double y1, double x2, double y2, bool polar) {
 	switch(sols) {
         case 2: {
-		    printf("P1 = (%.2f, %.2f), P2 = (%.2f, %.2f)\n", x1, y1, x2, y2);
+		    printf("Polar: %d, P1 = (%.2f, %.2f), P2 = (%.2f, %.2f)\n", polar, x1, y1, x2, y2);
 		    break;
 	    }
 	    case 1: {
-		    printf("P1 = (%.2f, %.2f)\n", x1, y1);
+		    printf("Polar: %d, P1 = (%.2f, %.2f)\n", polar, x1, y1);
 		    break;
 	    }
 	    default: {
@@ -64,12 +56,51 @@ void SwarmTrafficAction::Step(double dt, double simTime)
 	}
 }
 
+void SwarmTrafficAction::Step(double dt, double simTime)
+{
+	LOG("SwarmTrafficAction Step");
+	
+	double x1, x2, y1, y2, s1, s2;
+
+	roadmanager::Road* road = odrManager_->GetRoadByIdx(0);
+	roadmanager::Geometry *geometry = road->GetGeometry(0);
+
+	char sols = lineIntersect(centralObject_->pos_, static_cast<roadmanager::Line*>(geometry), semiMajorAxis_, semiMinorAxis_, &x1, &y1, &x2, &y2);
+	print_sols(sols, x1, y1, x2, y2, false);
+
+	//sols = polarLineIntersect(centralObject_->pos_, static_cast<roadmanager::Line*>(geometry), semiMajorAxis_, semiMinorAxis_, &s1, &s1);
+
+	//printf("S: (%.2f, %.2f)\n", s1, s2);
+	//switch(sols) {
+    //    case 2: {
+	//	    polar2cartesian(s1, geometry->GetX(), geometry->GetY(), geometry->GetHdg(), &x1, &y1);
+	//		polar2cartesian(s2, geometry->GetX(), geometry->GetY(), geometry->GetHdg(), &x2, &y2);
+	//	    break;
+	//    }
+	//    case 1: {
+	//	    polar2cartesian(s1, geometry->GetX(), geometry->GetY(), geometry->GetHdg(), &x1, &y1);
+	//	    break;
+	//    }
+	//}
+
+	//sols = checkRange(static_cast<roadmanager::Line*>(geometry), sols, &x1, &x2, &y1, &y2);
+	//print_sols(sols, x1, y1, x2, y2, true);
+
+    if (++i == 1) { 
+	    Vehicle* vehicle = new Vehicle();
+	    vehicle->pos_.SetInertiaPos(x1, y2, centralObject_->pos_.GetH(), true);
+		vehicle->controller_ = 0;
+	    entities_.addObject(vehicle);
+	}
+	
+}
+
 void SwarmTrafficAction::initRoadSegments() {
 	int roadId = centralObject_->pos_.GetTrackId();
 	/* So far we have only one road, but in case of many, the intersection
 	 * with the ellipses may happen between two distinct roads
 	 */
-    front_.road = tail_.road = odrManager_->GetRoadById(roadId);
+    //front_.road = tail_.road = odrManager_->GetRoadById(roadId);
 
 	LOG("Road segments initialised correctly");
 }
