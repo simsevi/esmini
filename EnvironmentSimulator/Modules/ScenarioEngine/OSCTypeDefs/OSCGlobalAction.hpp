@@ -88,25 +88,36 @@ namespace scenarioengine
 	{
 	public:
 		
-		typedef struct {
+		typedef struct segmentInfo;
+		struct segmentInfo {
 			roadmanager::Road* road;
             int                segmentIdx;
 			double             x;
 			double             y;
-		} segmentInfo;
+            Vehicle            *last;
+
+			segmentInfo() : last(NULL) {}
+			segmentInfo operator=(segmentInfo seg) {
+                road = seg.road;
+				segmentIdx = seg.segmentIdx;
+				x = seg.x;
+				y = seg.y;
+			}
+		};
 
 		typedef struct {
 			segmentInfo upper, lower;
 		} curveInfo;
 		
-		SwarmTrafficAction() : OSCGlobalAction(OSCGlobalAction::Type::SWARM_TRAFFIC), centralObject_(0), i(0) {};
+		SwarmTrafficAction() : OSCGlobalAction(OSCGlobalAction::Type::SWARM_TRAFFIC), centralObject_(0), i(0) {
+			vehiclesId_.clear();
+		};
 
-		SwarmTrafficAction(const SwarmTrafficAction& action) : OSCGlobalAction(OSCGlobalAction::Type::SWARM_TRAFFIC), i(0)
-		{
+		SwarmTrafficAction(const SwarmTrafficAction& action) : OSCGlobalAction(OSCGlobalAction::Type::SWARM_TRAFFIC), i(0) {
+		    vehiclesId_.clear();
 		}
 
-		OSCGlobalAction* Copy()
-		{
+		OSCGlobalAction* Copy() {
 			SwarmTrafficAction* new_action = new SwarmTrafficAction(*this);
 			return new_action;
 		}
@@ -139,10 +150,15 @@ namespace scenarioengine
 		double innerRadius_, semiMajorAxis_, semiMinorAxis_;
 		curveInfo circle_, ellipse_;
 		roadmanager::OpenDrive* odrManager_;
-		Entities entities_;
+		Entities *entities_;
 		size_t i;
+		std::vector<int> vehiclesId_;
+		bool a = true;
 
 		void initRoadSegments();
+		void spawn(segmentInfo &segment, int lane, double hdg_offset);
+		bool detectPoints();
+		void despawn();
 	};
 }
 
