@@ -102,6 +102,7 @@ namespace scenarioengine
 				segmentIdx = seg.segmentIdx;
 				x = seg.x;
 				y = seg.y;
+				return *this;
 			}
 		};
 
