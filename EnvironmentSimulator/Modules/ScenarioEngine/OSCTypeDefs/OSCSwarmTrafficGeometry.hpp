@@ -84,7 +84,7 @@ namespace STGeometry {
         double xmin, ymin, xmax, ymax, hdg;
 
         xmin = line->GetX();
-        xmax = line->GetY();
+        ymin = line->GetY();
         line->EvaluateDS(line->GetLength(), &xmax, &ymax, &hdg);
 
         if (xmin > xmax) std::swap(xmin, xmax);
