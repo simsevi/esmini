@@ -167,6 +167,7 @@ void SwarmTrafficAction::despawn() {
             pos.XYZH2TrackPos(ellipse_.upper.x, ellipse_.upper.y, 0, centralObject_->pos_.GetH());
 			if (vehicle->pos_.GetS() >= pos.GetS()) { 
 			    entities_->removeObject(vehicle->name_);
+				delete vehicle;
 				idPtr = vehiclesId_.erase(idPtr);
 				increase = false;
 			}
@@ -174,6 +175,7 @@ void SwarmTrafficAction::despawn() {
 			pos.XYZH2TrackPos(ellipse_.lower.x, ellipse_.lower.y, 0, centralObject_->pos_.GetH());
 			if (vehicle->pos_.GetS() <= pos.GetS()) {
 			    entities_->removeObject(vehicle->name_);
+				delete vehicle;
 				idPtr = vehiclesId_.erase(idPtr);
 				increase = false;
 			}
