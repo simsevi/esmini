@@ -88,7 +88,6 @@ void SwarmTrafficAction::spawn(segmentInfo &segment, int lane, double hdg_offset
 	int id                   = entities_->addObject(vehicle);
 	vehicle->name_           = std::to_string(id);
 	segment.last             = vehicle;
-	printf("GOT ID: %d\n", id);
 	vehiclesId_.push_back(id);
 }
 
@@ -158,14 +157,10 @@ bool SwarmTrafficAction::detectPoints() {
 }
 
 void SwarmTrafficAction::despawn() {
-	for (auto obj : entities_->object_) {
-		printf("OBJ id: %d\n", obj->id_);
-	}
-	
+
 	auto idPtr = vehiclesId_.begin();
 	bool increase = true;
 	while (idPtr < vehiclesId_.end()) {
-		printf("ID: %d\n", *idPtr);
 		Object *vehicle = entities_->GetObjectById(*idPtr);
 		roadmanager::Position pos;
         if (vehicle->pos_.GetH() == centralObject_->pos_.GetH()) {
