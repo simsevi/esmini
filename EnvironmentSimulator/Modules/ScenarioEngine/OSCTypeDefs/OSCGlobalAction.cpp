@@ -68,85 +68,72 @@ void SwarmTrafficAction::initRoadSegments() {
 
 }
 
-void SwarmTrafficAction::spawn(segmentInfo &segment, int lane, double hdg_offset) {
-	if (segment.segmentIdx == -1) return;
-
-	// Ensure some distance between two spawned veichles
-	if (segment.last){
-		roadmanager::Position pos, c_pos;
-		c_pos = segment.last->pos_;
-		pos.XYZH2TrackPos(segment.x, segment.y, 0, c_pos.GetH() + hdg_offset * M_PI);
-		if (abs(pos.GetS() - c_pos.GetS()) < 20) return;
-	}
-
+void SwarmTrafficAction::spawn(pointRef &pRef, int lane, double hdg_offset) {
+	// Ensure spawnable point and some distance between two spawned veichles
+	if (pRef.segmentIdx == -1 || (pRef.last && (abs(pRef.pos.GetS() - pRef.last->pos_.GetS()) < 20)))
+	    return;
+		
 	Vehicle* vehicle = new Vehicle();
-	vehicle->pos_.SetInertiaPos(segment.x, segment.y, centralObject_->pos_.GetH() + hdg_offset * M_PI, true);
+	vehicle->pos_.SetInertiaPos(pRef.pos.GetX(), pRef.pos.GetY(), centralObject_->pos_.GetH() + hdg_offset * M_PI, true);
 	vehicle->pos_.SetLanePos(vehicle->pos_.GetTrackId(), lane, vehicle->pos_.GetS(), 0);
 	vehicle->SetSpeed(centralObject_->GetSpeed());
 	vehicle->controller_     = 0;
 	vehicle->model_filepath_ = centralObject_->model_filepath_;
 	int id                   = entities_->addObject(vehicle);
 	vehicle->name_           = std::to_string(id);
-	segment.last             = vehicle;
+	pRef.last             = vehicle;
 	vehiclesId_.push_back(id);
 }
 
 bool SwarmTrafficAction::detectPoints() {
-	double s1, s2;
 	char sols;
-	segmentInfo seg1, seg2;
+	pointInfo pt1, pt2;
 	roadmanager::Position pos;
 
 	roadmanager::Road* road = odrManager_->GetRoadByIdx(0);
     
-	seg1.road = seg2.road = road;
+	pt1.road = pt2.road = road; // Now just working with only one road
 	for (size_t i = 0; i < road->GetNumberOfGeometries(); i++) {
 		roadmanager::Geometry *geometry = road->GetGeometry(i);
 		sols = lineIntersect(centralObject_->pos_, 
 		                     static_cast<roadmanager::Line*>(geometry), 
 							 semiMajorAxis_, semiMinorAxis_, 
-							 &seg1.x, &seg1.y, &seg2.x, &seg2.y);
+							 &pt1.x, &pt1.y, &pt2.x, &pt2.y);
 		switch (sols) {
 			case 2:
-			    seg1.segmentIdx = seg2.segmentIdx = i;
+			    pt1.segmentIdx = pt2.segmentIdx = i;
+				break;
 			case 1:
-			    seg1.segmentIdx = i;
+			    pt1.segmentIdx = i;
+				break;
 		}
 	}
 
 	switch(sols) {
 		case 2: { 
 			printf("Detected 2 points\n");
-		    pos.XYZH2TrackPos(seg1.x, seg1.y, 0, seg1.road->GetGeometry(seg1.segmentIdx)->GetHdg());
-			s1 = pos.GetS();
 
-			pos.XYZH2TrackPos(seg2.x, seg2.y, 0, seg2.road->GetGeometry(seg2.segmentIdx)->GetHdg());
-			s2 = pos.GetS();
+			pointRef &lower = ellipse_.lower;
+			pointRef &upper = ellipse_.upper; 
 
-			if (s1 <= s2) {
-				ellipse_.lower = seg1;
-				ellipse_.upper = seg2;
-			} else {
-				ellipse_.lower = seg2;
-				ellipse_.upper = seg1;
-			}
+			lower = pt1;
+			upper = pt2;
+
+			if (lower.pos.GetS() > upper.pos.GetS()) std::swap(lower, upper);
 			break;
 		}
 		case 1: { 
 			printf("Detected 1 points\n");
-		    pos.XYZH2TrackPos(seg1.x, seg1.y, 0, seg1.road->GetGeometry(seg1.segmentIdx)->GetHdg());
-			s1 = pos.GetS();
+		    pointRef &ptRef = ellipse_.lower;
+			ptRef = pt1;
 
 			roadmanager::Position pos_ = centralObject_->pos_;
-			
-			s2 = centralObject_->pos_.GetS();
 
-			if (s1 <= s2) {
-				ellipse_.lower            = seg1;
-				ellipse_.upper.segmentIdx = -1;
-			} else {
-				ellipse_.upper            = seg1;
+			if (ptRef.pos.GetS() > pos_.GetS()) {
+				ellipse_.upper            = pt1;
 				ellipse_.lower.segmentIdx = -1;
+			} else {
+				ellipse_.upper.segmentIdx = -1;
 			}
 			break;
 		}
@@ -157,23 +144,19 @@ bool SwarmTrafficAction::detectPoints() {
 }
 
 void SwarmTrafficAction::despawn() {
-
 	auto idPtr = vehiclesId_.begin();
 	bool increase = true;
 	while (idPtr < vehiclesId_.end()) {
 		Object *vehicle = entities_->GetObjectById(*idPtr);
-		roadmanager::Position pos;
         if (vehicle->pos_.GetH() == centralObject_->pos_.GetH()) {
-            pos.XYZH2TrackPos(ellipse_.upper.x, ellipse_.upper.y, 0, centralObject_->pos_.GetH());
-			if (vehicle->pos_.GetS() >= pos.GetS()) { 
+			if (vehicle->pos_.GetS() >= ellipse_.upper.pos.GetS()) { 
 			    entities_->removeObject(vehicle->name_);
 				delete vehicle;
 				idPtr = vehiclesId_.erase(idPtr);
 				increase = false;
 			}
 		} else {
-			pos.XYZH2TrackPos(ellipse_.lower.x, ellipse_.lower.y, 0, centralObject_->pos_.GetH());
-			if (vehicle->pos_.GetS() <= pos.GetS()) {
+			if (vehicle->pos_.GetS() <= ellipse_.lower.pos.GetS()) {
 			    entities_->removeObject(vehicle->name_);
 				delete vehicle;
 				idPtr = vehiclesId_.erase(idPtr);

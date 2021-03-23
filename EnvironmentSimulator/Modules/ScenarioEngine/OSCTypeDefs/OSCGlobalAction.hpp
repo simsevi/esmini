@@ -88,33 +88,39 @@ namespace scenarioengine
 	{
 	public:
 		
-		typedef struct segmentInfo;
-		struct segmentInfo {
+		typedef struct {
 			roadmanager::Road* road;
             int                segmentIdx;
 			double             x;
 			double             y;
-            Vehicle            *last;
+			double             h;
+		} pointInfo;
 
-			segmentInfo() : last(NULL) {}
-			segmentInfo operator=(segmentInfo seg) {
-                road = seg.road;
-				segmentIdx = seg.segmentIdx;
-				x = seg.x;
-				y = seg.y;
+		typedef struct pointRef;
+		struct pointRef {
+			roadmanager::Road*    road;
+			Vehicle*              last;
+            int                   segmentIdx;
+			roadmanager::Position pos;
+
+			pointRef() : last(NULL) {}
+			pointRef operator=(pointInfo ptInfo) {
+                road       = ptInfo.road;
+				segmentIdx = ptInfo.segmentIdx;
+				pos.XYZH2TrackPos(ptInfo.x, ptInfo.y, 0, ptInfo.h);
 				return *this;
 			}
 		};
 
 		typedef struct {
-			segmentInfo upper, lower;
+			pointRef upper, lower;
 		} curveInfo;
 		
-		SwarmTrafficAction() : OSCGlobalAction(OSCGlobalAction::Type::SWARM_TRAFFIC), centralObject_(0), i(0) {
+		SwarmTrafficAction() : OSCGlobalAction(OSCGlobalAction::Type::SWARM_TRAFFIC), centralObject_(0) {
 			vehiclesId_.clear();
 		};
 
-		SwarmTrafficAction(const SwarmTrafficAction& action) : OSCGlobalAction(OSCGlobalAction::Type::SWARM_TRAFFIC), i(0) {
+		SwarmTrafficAction(const SwarmTrafficAction& action) : OSCGlobalAction(OSCGlobalAction::Type::SWARM_TRAFFIC) {
 		    vehiclesId_.clear();
 		}
 
@@ -127,8 +133,7 @@ namespace scenarioengine
 
 		void Step(double dt, double simTime);
 
-		void print()
-		{
+		void print() {
 			LOG("");
 		}
 
@@ -136,28 +141,19 @@ namespace scenarioengine
 		void SetInnerRadius(double innerRadius)   { innerRadius_   = innerRadius;}
 		void SetSemiMajorAxes(double axes)        { semiMajorAxis_ = axes;       }
 		void SetSemiMinorAxes(double axes)        { semiMinorAxis_ = axes;       }
-		void SetEntities(Entities* entities)      { entities_ = entities; }
-
-        /*
-		void GetCentralObject() { return centralObject_; }
-		void GetInnerRadius()   { return innerRadius_  ; }
-		void GetSemiMajorAxes() { return semiMajorAxis_; }
-		void GetSemiMinorAxes() { return semiMinorAxis_; }
-		*/
+		void SetEntities(Entities* entities)      { entities_      = entities;   }
 
     private:
 
-		Object* centralObject_;
-		double innerRadius_, semiMajorAxis_, semiMinorAxis_;
-		curveInfo circle_, ellipse_;
-		roadmanager::OpenDrive* odrManager_;
 		Entities *entities_;
-		size_t i;
+		Object* centralObject_;
+		curveInfo circle_, ellipse_;
 		std::vector<int> vehiclesId_;
-		bool a = true;
+		roadmanager::OpenDrive* odrManager_;
+		double innerRadius_, semiMajorAxis_, semiMinorAxis_;
 
 		void initRoadSegments();
-		void spawn(segmentInfo &segment, int lane, double hdg_offset);
+		void spawn(pointRef &segment, int lane, double hdg_offset);
 		bool detectPoints();
 		void despawn();
 	};
