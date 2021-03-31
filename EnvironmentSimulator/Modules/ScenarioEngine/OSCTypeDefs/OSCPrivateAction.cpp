@@ -52,7 +52,7 @@ double OSCPrivateAction::TransitionDynamics::Evaluate(double factor, double star
 	{
 		LOG("Invalid Dynamics shape: %d", shape_);
 	}
-	
+
 	return end_value;
 }
 
@@ -78,7 +78,7 @@ void AssignRouteAction::End()
 	OSCAction::End();
 }
 
-void AssignRouteAction::ReplaceObjectRefs(Object* obj1, Object* obj2)
+void AssignRouteAction::ReplaceObjectRefs(Object *obj1, Object *obj2)
 {
 	if (object_ == obj1)
 	{
@@ -98,14 +98,14 @@ void FollowTrajectoryAction::Start()
 		object_->IsControllerActiveOnDomains(Controller::Domain::CTRL_LATERAL))
 	{
 		// lateral motion controlled elsewhere
-		// other action or controller already updated lateral dimension of object 
+		// other action or controller already updated lateral dimension of object
 		// potentially longitudinal dimension could be updated separatelly - but skip that for now
 		return;
 	}
 
 	traj_->Freeze();
 	object_->pos_.SetTrajectory(traj_);
-	
+
 	object_->SetDirtyBits(Object::DirtyBit::LATERAL | Object::DirtyBit::LONGITUDINAL);
 }
 
@@ -116,8 +116,8 @@ void FollowTrajectoryAction::End()
 	if (object_->GetControllerMode() == Controller::Mode::MODE_OVERRIDE &&
 		object_->IsControllerActiveOnDomains(Controller::Domain::CTRL_LATERAL))
 
-	// Disconnect trajectory
-	object_->pos_.SetTrajectory(0);
+		// Disconnect trajectory
+		object_->pos_.SetTrajectory(0);
 }
 
 void FollowTrajectoryAction::Step(double dt, double simTime)
@@ -126,7 +126,7 @@ void FollowTrajectoryAction::Step(double dt, double simTime)
 		object_->IsControllerActiveOnDomains(Controller::Domain::CTRL_LATERAL))
 	{
 		// lateral motion controlled elsewhere
-		// other action or controller already updated lateral dimension of object 
+		// other action or controller already updated lateral dimension of object
 		// potentially longitudinal dimension could be updated separatelly - but skip that for now
 		return;
 	}
@@ -140,7 +140,7 @@ void FollowTrajectoryAction::Step(double dt, double simTime)
 		// Reached end of trajectory
 		// Calculate road coordinates from final inertia (X, Y) coordinates
 		object_->pos_.XYZH2TrackPos(object_->pos_.GetX(), object_->pos_.GetY(), 0, object_->pos_.GetH(), false);
-		
+
 		End();
 	}
 	else
@@ -173,7 +173,7 @@ void FollowTrajectoryAction::Step(double dt, double simTime)
 	}
 }
 
-void FollowTrajectoryAction::ReplaceObjectRefs(Object* obj1, Object* obj2)
+void FollowTrajectoryAction::ReplaceObjectRefs(Object *obj1, Object *obj2)
 {
 	if (object_ == obj1)
 	{
@@ -181,18 +181,17 @@ void FollowTrajectoryAction::ReplaceObjectRefs(Object* obj1, Object* obj2)
 	}
 	if (traj_->shape_->type_ == roadmanager::Shape::ShapeType::CLOTHOID)
 	{
-		roadmanager::Clothoid* cl = (roadmanager::Clothoid*)traj_->shape_;
+		roadmanager::Clothoid *cl = (roadmanager::Clothoid *)traj_->shape_;
 		cl->pos_.ReplaceObjectRefs(&obj1->pos_, &obj2->pos_);
 	}
 	else if (traj_->shape_->type_ == roadmanager::Shape::ShapeType::POLYLINE)
 	{
-		roadmanager::PolyLine* pl = (roadmanager::PolyLine*)traj_->shape_;
+		roadmanager::PolyLine *pl = (roadmanager::PolyLine *)traj_->shape_;
 		for (size_t i = 0; i < pl->vertex_.size(); i++)
 		{
 			pl->vertex_[i]->pos_.ReplaceObjectRefs(&obj1->pos_, &obj2->pos_);
 		}
 	}
-
 }
 
 void AssignControllerAction::Start()
@@ -202,7 +201,7 @@ void AssignControllerAction::Start()
 		// Detach any controller from object
 		if (object_->controller_)
 		{
-			Controller* ctrl = (Controller*)object_->controller_;
+			Controller *ctrl = (Controller *)object_->controller_;
 			ctrl->Assign(0);
 			object_->SetAssignedController(0);
 		}
@@ -214,7 +213,6 @@ void AssignControllerAction::Start()
 
 	OSCAction::Start();
 }
-
 
 void LatLaneChangeAction::Start()
 {
@@ -234,9 +232,9 @@ void LatLaneChangeAction::Start()
 	else if (target_->type_ == Target::Type::RELATIVE)
 	{
 		// Find out target lane relative referred vehicle
-		target_lane_id_ = ((TargetRelative*)target_)->object_->pos_.GetLaneId() + target_->value_;
+		target_lane_id_ = ((TargetRelative *)target_)->object_->pos_.GetLaneId() + target_->value_;
 
-		if (target_lane_id_ == 0 || SIGN(((TargetRelative*)target_)->object_->pos_.GetLaneId()) != SIGN(target_lane_id_))
+		if (target_lane_id_ == 0 || SIGN(((TargetRelative *)target_)->object_->pos_.GetLaneId()) != SIGN(target_lane_id_))
 		{
 			// Skip reference lane (id == 0)
 			target_lane_id_ = SIGN(target_lane_id_ - object_->pos_.GetLaneId()) * (abs(target_lane_id_) + 1);
@@ -245,7 +243,7 @@ void LatLaneChangeAction::Start()
 
 	target_t_ =
 		SIGN(target_lane_id_) *
-		object_->pos_.GetOpenDrive()->GetRoadById(object_->pos_.GetTrackId())->GetCenterOffset(object_->pos_.GetS(), target_lane_id_) +
+			object_->pos_.GetOpenDrive()->GetRoadById(object_->pos_.GetTrackId())->GetCenterOffset(object_->pos_.GetS(), target_lane_id_) +
 		target_lane_offset_;
 
 	// if dynamics dimension is rate, transform into distance
@@ -256,7 +254,7 @@ void LatLaneChangeAction::Start()
 
 		if (transition_dynamics_.shape_ == DynamicsShape::LINEAR)
 		{
-			// longitudinal distance = long_speed * time = long_speed * lat_dist / lat_speed 
+			// longitudinal distance = long_speed * time = long_speed * lat_dist / lat_speed
 			if (fabs(rate) > SMALL_NUMBER)
 			{
 				transition_dynamics_.target_value_ = fabs(object_->speed_ * lat_distance / rate);
@@ -315,7 +313,7 @@ void LatLaneChangeAction::Step(double dt, double)
 		elapsed_ += dt_adjusted;
 	}
 	else if (transition_dynamics_.dimension_ == DynamicsDimension::DISTANCE ||
-			transition_dynamics_.dimension_ == DynamicsDimension::RATE)
+			 transition_dynamics_.dimension_ == DynamicsDimension::RATE)
 	{
 		elapsed_ += object_->speed_ * dt;
 	}
@@ -338,7 +336,6 @@ void LatLaneChangeAction::Step(double dt, double)
 	{
 		object_->pos_.SetTrackPos(object_->pos_.GetTrackId(), object_->pos_.GetS(), t_);
 	}
-		
 
 	if (factor > 1.0 || abs(t_ - target_t_) < SMALL_NUMBER || SIGN(t_ - start_t_) != SIGN(target_t_ - start_t_))
 	{
@@ -357,7 +354,7 @@ void LatLaneChangeAction::Step(double dt, double)
 	object_->SetDirtyBits(Object::DirtyBit::LATERAL);
 }
 
-void LatLaneChangeAction::ReplaceObjectRefs(Object* obj1, Object* obj2)
+void LatLaneChangeAction::ReplaceObjectRefs(Object *obj1, Object *obj2)
 {
 	if (object_ == obj1)
 	{
@@ -366,9 +363,9 @@ void LatLaneChangeAction::ReplaceObjectRefs(Object* obj1, Object* obj2)
 
 	if (target_->type_ == Target::Type::RELATIVE)
 	{
-		if (((TargetRelative*)target_)->object_ == obj1)
+		if (((TargetRelative *)target_)->object_ == obj1)
 		{
-			((TargetRelative*)target_)->object_ = obj2;
+			((TargetRelative *)target_)->object_ = obj2;
 		}
 	}
 }
@@ -396,7 +393,7 @@ void LatLaneOffsetAction::Start()
 		int lane_id = object_->pos_.GetLaneId();
 
 		// Find out referred object track position
-		roadmanager::Position refpos = ((TargetRelative*)target_)->object_->pos_;
+		roadmanager::Position refpos = ((TargetRelative *)target_)->object_->pos_;
 		refpos.SetTrackPos(refpos.GetTrackId(), refpos.GetS(), refpos.GetT() + target_->value_);
 		refpos.ForceLaneId(lane_id);
 
@@ -410,7 +407,7 @@ void LatLaneOffsetAction::Start()
 		dynamics_.transition_.target_value_ = 0.0;
 	}
 	else if (dynamics_.transition_.shape_ == DynamicsShape::LINEAR ||
-		dynamics_.transition_.shape_ == DynamicsShape::SINUSOIDAL)
+			 dynamics_.transition_.shape_ == DynamicsShape::SINUSOIDAL)
 	{
 		if (dynamics_.transition_.shape_ == DynamicsShape::LINEAR)
 		{
@@ -429,7 +426,8 @@ void LatLaneOffsetAction::Start()
 		// duration = sqrt(6t / a)
 		// Finally, distance = longitudinal speed * duration
 		duration = sqrt(6 * fabs(target_lane_offset_ - object_->pos_.GetOffset()) / dynamics_.max_lateral_acc_);
-		dynamics_.transition_.target_value_ = object_->GetSpeed() * duration;;
+		dynamics_.transition_.target_value_ = object_->GetSpeed() * duration;
+		;
 	}
 	else
 	{
@@ -476,7 +474,7 @@ void LatLaneOffsetAction::Step(double dt, double)
 	object_->SetDirtyBits(Object::DirtyBit::LATERAL);
 }
 
-void LatLaneOffsetAction::ReplaceObjectRefs(Object* obj1, Object* obj2)
+void LatLaneOffsetAction::ReplaceObjectRefs(Object *obj1, Object *obj2)
 {
 	if (object_ == obj1)
 	{
@@ -485,9 +483,9 @@ void LatLaneOffsetAction::ReplaceObjectRefs(Object* obj1, Object* obj2)
 
 	if (target_->type_ == Target::Type::RELATIVE)
 	{
-		if (((TargetRelative*)target_)->object_ == obj1)
+		if (((TargetRelative *)target_)->object_ == obj1)
 		{
-			((TargetRelative*)target_)->object_ = obj2;
+			((TargetRelative *)target_)->object_ = obj2;
 		}
 	}
 }
@@ -502,7 +500,7 @@ double LongSpeedAction::TargetRelative::GetValue()
 			consumed_ = true;
 		}
 	}
-	else 
+	else
 	{
 		object_speed_ = object_->speed_;
 	}
@@ -537,7 +535,7 @@ void LongSpeedAction::Start()
 	if (transition_dynamics_.shape_ == DynamicsShape::STEP)
 	{
 		object_->SetSpeed(target_->GetValue());
-		if (!(target_->type_ == Target::TargetType::RELATIVE && ((TargetRelative*)target_)->continuous_ == true))
+		if (!(target_->type_ == Target::TargetType::RELATIVE && ((TargetRelative *)target_)->continuous_ == true))
 		{
 			OSCAction::End();
 		}
@@ -552,7 +550,7 @@ void LongSpeedAction::Start()
 			transition_dynamics_.target_value_ = 2 * transition_dynamics_.target_value_ / (start_speed_ + target_->GetValue());
 		}
 	}
- }
+}
 
 void LongSpeedAction::Step(double dt, double)
 {
@@ -570,7 +568,7 @@ void LongSpeedAction::Step(double dt, double)
 	if (transition_dynamics_.dimension_ == DynamicsDimension::RATE)
 	{
 		elapsed_ += dt;
-		
+
 		// Assume user want to reach target speed, ignore sign of rate
 		new_speed = start_speed_ + SIGN(target_->GetValue() - start_speed_) * fabs(transition_dynamics_.target_value_) * elapsed_;
 
@@ -583,13 +581,13 @@ void LongSpeedAction::Step(double dt, double)
 			target_speed_reached = true;
 		}
 	}
-	else 
+	else
 	{
 		elapsed_ += dt;
 
 		factor = elapsed_ / (transition_dynamics_.target_value_);
 
-		if(factor > 1.0)
+		if (factor > 1.0)
 		{
 			new_speed = target_->GetValue();
 			target_speed_reached = true;
@@ -602,13 +600,13 @@ void LongSpeedAction::Step(double dt, double)
 
 	object_->SetSpeed(new_speed);
 
-	if (target_speed_reached && !(target_->type_ == Target::TargetType::RELATIVE && ((TargetRelative*)target_)->continuous_ == true))
+	if (target_speed_reached && !(target_->type_ == Target::TargetType::RELATIVE && ((TargetRelative *)target_)->continuous_ == true))
 	{
 		OSCAction::End();
 	}
 }
 
-void LongSpeedAction::ReplaceObjectRefs(Object* obj1, Object* obj2)
+void LongSpeedAction::ReplaceObjectRefs(Object *obj1, Object *obj2)
 {
 	if (object_ == obj1)
 	{
@@ -617,9 +615,9 @@ void LongSpeedAction::ReplaceObjectRefs(Object* obj1, Object* obj2)
 
 	if (target_->type_ == Target::TargetType::RELATIVE)
 	{
-		if (((TargetRelative*)target_)->object_ == obj1)
+		if (((TargetRelative *)target_)->object_ == obj1)
 		{
-			((TargetRelative*)target_)->object_ = obj2;
+			((TargetRelative *)target_)->object_ = obj2;
 		}
 	}
 }
@@ -690,7 +688,7 @@ void LongDistanceAction::Step(double dt, double)
 	}
 	else
 	{
-		// Apply damped spring model with critical/optimal damping factor		
+		// Apply damped spring model with critical/optimal damping factor
 		// Adjust tension in spring in proportion to max acceleration. Experimental, may be removed.
 		double spring_constant_adjusted = 0.1 * dynamics_.max_acceleration_ * spring_constant;
 		dc = 2 * sqrt(spring_constant_adjusted);
@@ -719,7 +717,7 @@ void LongDistanceAction::Step(double dt, double)
 	//	LOG("Dist %.2f diff %.2f acc %.2f speed %.2f", distance, distance_diff, acc, object_->speed_);
 }
 
-void LongDistanceAction::ReplaceObjectRefs(Object* obj1, Object* obj2)
+void LongDistanceAction::ReplaceObjectRefs(Object *obj1, Object *obj2)
 {
 	if (object_ == obj1)
 	{
@@ -776,7 +774,7 @@ void TeleportAction::Step(double dt, double simTime)
 	OSCAction::Stop();
 }
 
-void TeleportAction::ReplaceObjectRefs(Object* obj1, Object* obj2)
+void TeleportAction::ReplaceObjectRefs(Object *obj1, Object *obj2)
 {
 	if (object_ == obj1)
 	{
@@ -798,7 +796,7 @@ double SynchronizeAction::CalcSpeedForLinearProfile(double v_final, double time,
 	return v0;
 }
 
-const char* SynchronizeAction::Mode2Str(SynchMode mode)
+const char *SynchronizeAction::Mode2Str(SynchMode mode)
 {
 	if (mode == SynchMode::MODE_NONE)
 	{
@@ -834,7 +832,7 @@ const char* SynchronizeAction::Mode2Str(SynchMode mode)
 	}
 }
 
-const char* SynchronizeAction::SubMode2Str(SynchSubmode submode)
+const char *SynchronizeAction::SubMode2Str(SynchSubmode submode)
 {
 	if (submode == SynchSubmode::SUBMODE_CONCAVE)
 	{
@@ -854,7 +852,7 @@ const char* SynchronizeAction::SubMode2Str(SynchSubmode submode)
 	}
 }
 
-void SynchronizeAction::PrintStatus(const char* custom_msg)
+void SynchronizeAction::PrintStatus(const char *custom_msg)
 {
 	LOG("%s, mode=%s (%d) sub-mode=%s (%d)", custom_msg,
 		Mode2Str(mode_), mode_, SubMode2Str(submode_), submode_);
@@ -907,7 +905,7 @@ void SynchronizeAction::Step(double dt, double)
 	{
 		// No road network path between master vehicle and master target pos - using world coordinate distance
 		diff.ds = GetLengthOfLine2D(master_object_->pos_.GetX(), master_object_->pos_.GetY(),
-			target_position_master_->GetX(), target_position_master_->GetY());
+									target_position_master_->GetX(), target_position_master_->GetY());
 	}
 	masterDist = fabs(diff.ds);
 
@@ -915,7 +913,7 @@ void SynchronizeAction::Step(double dt, double)
 	{
 		// No road network path between action vehicle and action target pos - using world coordinate distance
 		diff.ds = GetLengthOfLine2D(object_->pos_.GetX(), object_->pos_.GetY(),
-			target_position_->GetX(), target_position_->GetY());
+									target_position_->GetX(), target_position_->GetY());
 	}
 	dist = fabs(diff.ds);
 
@@ -975,7 +973,7 @@ void SynchronizeAction::Step(double dt, double)
 			if (steadyState_.type_ != SteadyStateType::STEADY_STATE_NONE && mode_ != SynchMode::MODE_STEADY_STATE)
 			{
 				double time_to_ss = steadyState_.dist_ / final_speed_->GetValue();
-				
+
 				if (dist - steadyState_.dist_ < SMALL_NUMBER || masterTimeToDest - time_to_ss < SMALL_NUMBER)
 				{
 					mode_ = SynchMode::MODE_STEADY_STATE;
@@ -996,15 +994,15 @@ void SynchronizeAction::Step(double dt, double)
 				}
 			}
 
-			// For more information about calculations, see 
+			// For more information about calculations, see
 			// https://docs.google.com/document/d/1dEBUWlJVLUz6Rp9Ol1l90iG0LfNtcsgLyJ0kDdwgPzA/edit?usp=sharing
-			// 
+			//
 			// Interactive Python script plotting calculation result based on various input values
 			// https://drive.google.com/file/d/1z902gRYogkLhUAV1pZLc9gcgwnak7TBH/view?usp=sharing
 			// (the method described below is "Spedified final speed - alt 1")
 			//
 			// Here follow a brief description:
-			// 
+			//
 			// Calculate acceleration needed to reach the destination in due time
 			// Four cases
 			//   1  Linear. Reach final speed with constant acceleration
@@ -1014,44 +1012,44 @@ void SynchronizeAction::Step(double dt, double)
 			//
 			//   Case 2-3 involves two (case 2a, 2b) or three (case 3) phases with constant acceleration/deceleration
 			//   Last phase in case 2-3 is actually case 1 - a linear change to final speed
-			// 
+			//
 			// Symbols
 			//   given:
 			//     s = distance to destination
 			//     t = master object time to destination
 			//     v0 = current speed
 			//     v1 = final speed
-			//     va = Average speed needed to reach destination 
+			//     va = Average speed needed to reach destination
 			//   variables:
-			//     s1 = distance first phase 
+			//     s1 = distance first phase
 			//     s2 = distance second phase
 			//     x = end time for first phase
 			//     y = end time for second (last) phase
 			//     vx = speed at x
-			// 
+			//
 			// Equations
 			//   case 1
 			//     v1 = 2 * s / t - v2
 			//     a = (v2 - v1) / t
 			//
 			//   case 2 (a & b)
-			//      system: 
+			//      system:
 			//        s1 = v1 * x + (vx - v1) * x / 2
 			//        s2 = v2 * y + (vx - v2) * y / 2
 			//        t = x + y
 			//        s = s1 + s2
 			// 		  (vx - v1) / x = (vx - v2) / y
 			//
-			//      solve for x and vx   
+			//      solve for x and vx
 			//      a = (vx - v1) / x
-			// 
-			//   case 3 
-			//      system: 
+			//
+			//   case 3
+			//      system:
 			//        s1 = x * v1 / 2
 			//        s2 = y * v2 / 2
 			//        s = s1 + s2
 			//        v1 / v2 = x / y
-			//      
+			//
 			//      solve for x
 			//      a = -v1 / x
 
@@ -1080,7 +1078,7 @@ void SynchronizeAction::Step(double dt, double)
 				if (object_->speed_ < 0)
 				{
 					object_->SetSpeed(0);
-					mode_ = SynchMode::MODE_WAITING;  // wait for master to move
+					mode_ = SynchMode::MODE_WAITING; // wait for master to move
 					PrintStatus("Waiting");
 				}
 
@@ -1101,7 +1099,7 @@ void SynchronizeAction::Step(double dt, double)
 					return;
 				}
 			}
-			
+
 			if (mode_ == SynchMode::MODE_LINEAR)
 			{
 				if (masterTimeToDest > LARGE_NUMBER - 1)
@@ -1130,7 +1128,7 @@ void SynchronizeAction::Step(double dt, double)
 					return;
 				}
 			}
-			
+
 			if (mode_ == SynchMode::MODE_NONE)
 			{
 				// Since not linear mode, go into non-linear mode
@@ -1154,7 +1152,7 @@ void SynchronizeAction::Step(double dt, double)
 			double v0 = object_->speed_;
 			double v1 = final_speed_->GetValue();
 
-			double signed_term = sqrt(2.0) * sqrt(2.0 * s*s - 2 * (v1 + v0)*t*s + (v1*v1 + v0 * v0)*t*t);
+			double signed_term = sqrt(2.0) * sqrt(2.0 * s * s - 2 * (v1 + v0) * t * s + (v1 * v1 + v0 * v0) * t * t);
 
 			// Calculate both solutions from the quadratic equation
 			double vx = 0;
@@ -1167,8 +1165,8 @@ void SynchronizeAction::Step(double dt, double)
 			}
 			else
 			{
-				double x1 = -(signed_term + 2 * s - 2 * v1*t) / (2 * (v1 - v0));
-				double x2 = -(-signed_term + 2 * s - 2 * v1*t) / (2 * (v1 - v0));
+				double x1 = -(signed_term + 2 * s - 2 * v1 * t) / (2 * (v1 - v0));
+				double x2 = -(-signed_term + 2 * s - 2 * v1 * t) / (2 * (v1 - v0));
 				double vx1 = (2 * s - signed_term) / (2 * t);
 				double vx2 = (2 * s + signed_term) / (2 * t);
 				double a1 = (vx1 - v0) / x1;
@@ -1187,14 +1185,14 @@ void SynchronizeAction::Step(double dt, double)
 				}
 				else
 				{
-					// No solution 
+					// No solution
 					acc = 0;
 				}
 			}
 
 			if (mode_ == SynchMode::MODE_NON_LINEAR &&
 				((submode_ == SynchSubmode::SUBMODE_CONCAVE && acc > 0) ||
-				(submode_ == SynchSubmode::SUBMODE_CONVEX && acc < 0)))
+				 (submode_ == SynchSubmode::SUBMODE_CONVEX && acc < 0)))
 			{
 				// Reached the apex of the speed profile, switch mode and phase
 				mode_ = SynchMode::MODE_LINEAR;
@@ -1209,7 +1207,7 @@ void SynchronizeAction::Step(double dt, double)
 			{
 				// In phase one, decelerate to 0, then stop
 				// Calculate time needed to cover distance proportional to current speed / final speed
-				double t1 = 2 * v0*s / (v0*v0 + v1 * v1);
+				double t1 = 2 * v0 * s / (v0 * v0 + v1 * v1);
 				if (fabs(t1) > SMALL_NUMBER)
 				{
 					acc = -v0 / t1;
@@ -1255,8 +1253,7 @@ void VisibilityAction::Start()
 	object_->SetVisibilityMask(
 		(graphics_ ? Object::Visibility::GRAPHICS : 0) |
 		(traffic_ ? Object::Visibility::TRAFFIC : 0) |
-		(sensors_ ? Object::Visibility::SENSORS : 0)
-	);
+		(sensors_ ? Object::Visibility::SENSORS : 0));
 }
 
 void VisibilityAction::Step(double dt, double simTime)
@@ -1266,3 +1263,46 @@ void VisibilityAction::Step(double dt, double simTime)
 
 	OSCAction::Stop();
 }
+
+
+void OverrideControlAction::Start()
+{
+	
+	object_->OverrideActionList.throttle.active = active_;
+	object_->OverrideActionList.throttle.value = value_;
+	OSCAction::Start();
+}
+
+void OverrideControlAction::End()
+{
+	//object_->OverrideActionList.throttle.active = false;
+	OSCAction::End();
+}
+
+void OverrideControlAction::Step(double dt, double simTime)
+{
+	(void)dt;
+	(void)simTime;
+}
+
+void OverrideControlAction::RangeCheckAndErrorLog(const pugi::char_t* name, double& valueCheck, double upperLimit, double lowerLimit, bool ifRound)
+{
+	double temp = valueCheck;
+	if(valueCheck<=upperLimit&&valueCheck>=lowerLimit)
+	{	
+		if(!ifRound){
+			LOG("%s value %.2f is within range.",name,valueCheck);
+		}
+		else
+		{
+			valueCheck = round(temp);
+			LOG("%s value %.1f is within range and the value is rounded to %.1f.",name,temp,valueCheck);
+		}
+	}
+	else
+	{
+		valueCheck = (valueCheck>upperLimit)?upperLimit:lowerLimit;
+		LOG("%s value is not within range and is modified from %f to %.1f.", name, temp, valueCheck);
+	}
+}
+

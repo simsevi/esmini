@@ -400,8 +400,8 @@ extern "C"
 		@param list Pointer/reference to a SE_OverrideActionList struct to be filled in
 		@return 0 if successful, -1 if not
 	*/
-	SE_DLL_API int SE_GetOverrideActionStatus(int index, SE_OverrideActionList* list) { return 0; }
-
+	//TODO
+	SE_DLL_API int SE_GetOverrideActionStatus(int index, SE_OverrideActionList* list);
 	/**
 		Get the name of specified object
 		@param index Index of the object. Note: not ID

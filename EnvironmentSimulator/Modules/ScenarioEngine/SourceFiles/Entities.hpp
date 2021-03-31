@@ -20,10 +20,9 @@
 #include "Trail.hpp"
 #include "OSCBoundingBox.hpp"
 
-
 namespace scenarioengine
 {
-	class Controller;  // Forward declaration
+	class Controller; // Forward declaration
 
 	class Object
 	{
@@ -36,24 +35,26 @@ namespace scenarioengine
 			MISC_OBJECT
 		} Type;
 
-		typedef enum {
-			NONE =            0,
-			LONGITUDINAL =   (1 << 0),
-			LATERAL =        (1 << 1),
-			SPEED =          (1 << 2),
-			WHEEL_ANGLE =    (1 << 3),
+		typedef enum
+		{
+			NONE = 0,
+			LONGITUDINAL = (1 << 0),
+			LATERAL = (1 << 1),
+			SPEED = (1 << 2),
+			WHEEL_ANGLE = (1 << 3),
 			WHEEL_ROTATION = (1 << 4),
-			VISIBILITY =     (1 << 5),
-			VELOCITY =       (1 << 6),
-			ANGULAR_RATE =   (1 << 7),
-			ACCELERATION =   (1 << 8),
-			ANGULAR_ACC =    (1 << 9),
+			VISIBILITY = (1 << 5),
+			VELOCITY = (1 << 6),
+			ANGULAR_RATE = (1 << 7),
+			ACCELERATION = (1 << 8),
+			ANGULAR_ACC = (1 << 9),
 		} DirtyBit;
 
-		typedef enum {
+		typedef enum
+		{
 			GRAPHICS = (1 << 0),
-			TRAFFIC  = (1 << 1),
-			SENSORS  = (1 << 2),
+			TRAFFIC = (1 << 1),
+			SENSORS = (1 << 2),
 		} Visibility;
 
 		struct Property
@@ -61,6 +62,22 @@ namespace scenarioengine
 			std::string name_;
 			std::string value_;
 		};
+
+		typedef struct 
+		{
+			bool active;  // True: override; false: stop overriding
+			double value; // Depends on action, see SE_OverrideActionList
+		}OverrideActionStatus;
+
+		struct 
+		{
+			OverrideActionStatus throttle;	   // Value range: [0..1]. 0 represents 0%, 1 represents 100% of pressing the throttle pedal.
+			OverrideActionStatus brake;		   // Value range: [0..1]. 0 represents 0%, 1 represents 100% of pressing the brake pedal.
+			OverrideActionStatus clutch;		   // Value range: [0..1]. 0 represents 0%, 1 represents 100% of pressing the clutch pedal.
+			OverrideActionStatus parkingBrake;  // Value range: [0..1]. 0 represents 0%, The value 1 represent the maximum parking brake state.
+			OverrideActionStatus steeringWheel; // Steering wheel angle. Unit: rad. (0: Neutral position, positive: Left, negative: Right)
+			OverrideActionStatus gear;		   // Gear number. (-1:Reverse, 0:Neutral, 1:Gear 1, 2:Gear 2, and so on.)
+		}OverrideActionList;
 
 		Type type_;
 		int category_holder_; // placehoder for specific object category in vehicle, pedestrian or misobject
@@ -72,13 +89,13 @@ namespace scenarioengine
 		double trail_follow_s_;
 		double trail_closest_pos_[3];
 		double sensor_pos_[3];
-		Object* ghost_;
+		Object *ghost_;
 
 		double speed_;
 		double wheel_angle_;
 		double wheel_rot_;
 		roadmanager::Position pos_;
-		roadmanager::Route* route_;
+		roadmanager::Route *route_;
 		std::string model_filepath_;
 		int model_id_;
 		ObjectTrail trail_;
@@ -90,12 +107,13 @@ namespace scenarioengine
 		double headstart_time_;
 		int visibilityMask_;
 
-		int dirty_; 
-		bool reset_; // indicate discreet movement, teleporting, no odometer update
-		Controller* controller_; // reference to any assigned controller object
+		int dirty_;
+		bool reset_;			 // indicate discreet movement, teleporting, no odometer update
+		Controller *controller_; // reference to any assigned controller object
 		bool isGhost_;
 
-		struct {
+		struct
+		{
 			double pos_x;
 			double pos_y;
 			double vel_x;
@@ -105,9 +123,9 @@ namespace scenarioengine
 		} state_old;
 
 		Object(Type type) : type_(type), id_(0), trail_follow_index_(0), speed_(0), wheel_angle_(0), wheel_rot_(0),
-			route_(0), model_filepath_(""), trail_follow_s_(0), odometer_(0), end_of_road_timestamp_(0.0),
-			off_road_timestamp_(0.0), stand_still_timestamp_(0), dirty_(0), reset_(0), controller_(0), headstart_time_(0), ghost_(0),
-			visibilityMask_(0xFF), isGhost_(false)
+							route_(0), model_filepath_(""), trail_follow_s_(0), odometer_(0), end_of_road_timestamp_(0.0),
+							off_road_timestamp_(0.0), stand_still_timestamp_(0), dirty_(0), reset_(0), controller_(0), headstart_time_(0), ghost_(0),
+							visibilityMask_(0xFF), isGhost_(false)
 		{
 			trail_closest_pos_[0] = 0.0;
 			trail_closest_pos_[1] = 0.0;
@@ -145,7 +163,7 @@ namespace scenarioengine
 			@param target The object to check
 			@return true if bounding boxes overlap else false
 		*/
-		bool Collision(Object* target);
+		bool Collision(Object *target);
 
 		/**
 			Check if point is colliding/overlapping with specified target object
@@ -163,7 +181,7 @@ namespace scenarioengine
 			@param longDist Returns longitudinal distance to target object
 			@return distance The free-space Euclidean distance between objects (0 if collision)
 		*/
-		double FreeSpaceDistance(Object* target, double* latDist, double* longDist);
+		double FreeSpaceDistance(Object *target, double *latDist, double *longDist);
 
 		/**
 			Measure the free-space distance to provided target 2D position
@@ -174,15 +192,15 @@ namespace scenarioengine
 			@param longDist Returns longitudinal distance
 			@return distance The free-space Euclidean distance between objects (0 if collision)
 		*/
-		double FreeSpaceDistancePoint(double x, double y, double* latDist, double* longDist);
+		double FreeSpaceDistancePoint(double x, double y, double *latDist, double *longDist);
 
 		void SetSpeed(double speed)
-		{ 
-			speed_ = speed; 
+		{
+			speed_ = speed;
 			SetDirtyBits(Object::DirtyBit::SPEED);
 		}
 		double GetSpeed() { return speed_; }
-		void SetAssignedController(Controller* controller)
+		void SetAssignedController(Controller *controller)
 		{
 			controller_ = controller;
 		}
@@ -195,8 +213,8 @@ namespace scenarioengine
 		int GetId() { return id_; }
 		void SetHeadstartTime(double headstartTime) { headstart_time_ = headstartTime; }
 		double GetHeadstartTime() { return headstart_time_; }
-		void SetGhost(Object* ghost) { ghost_ = ghost; }
-		Object* GetGhost() { return ghost_; }
+		void SetGhost(Object *ghost) { ghost_ = ghost; }
+		Object *GetGhost() { return ghost_; }
 		void SetVisibilityMask(int mask);
 		bool IsGhost() { return isGhost_; }
 		void SetVel(double x_vel, double y_vel, double z_vel);
@@ -238,8 +256,8 @@ namespace scenarioengine
 
 		Category category_;
 
-
-		Vehicle() : Object(Object::Type::VEHICLE), category_(Category::CAR) {
+		Vehicle() : Object(Object::Type::VEHICLE), category_(Category::CAR)
+		{
 			category_holder_ = static_cast<int>(category_);
 		}
 
@@ -271,7 +289,7 @@ namespace scenarioengine
 		}
 	};
 
-    class Pedestrian : public Object
+	class Pedestrian : public Object
 	{
 	public:
 		typedef enum
@@ -282,15 +300,16 @@ namespace scenarioengine
 		} Category;
 
 		std::string model_; /**< Definition of the model of the pedestrian. */
-		double mass_; /**< The mass of a pedestrian in kg. */
+		double mass_;		/**< The mass of a pedestrian in kg. */
 		std::string name_;
 		Category category_; /**< Category type of pedestrian. */
-		
+
 		// name, boundingBox and properties are included in base Object class.
 
-		Pedestrian() : Object(Object::Type::PEDESTRIAN), 
-		model_(""), mass_(0.0), name_(""), 
-		category_(Category::PEDESTRIAN) {
+		Pedestrian() : Object(Object::Type::PEDESTRIAN),
+					   model_(""), mass_(0.0), name_(""),
+					   category_(Category::PEDESTRIAN)
+		{
 			category_holder_ = static_cast<int>(category_);
 		}
 
@@ -316,10 +335,9 @@ namespace scenarioengine
 
 			return;
 		}
-
 	};
 
- class MiscObject : public Object
+	class MiscObject : public Object
 	{
 	public:
 		typedef enum
@@ -343,13 +361,14 @@ namespace scenarioengine
 			ROADMARK
 		} Category;
 
-		std::string model_; 
+		std::string model_;
 		double mass_;
-		std::string name_; 
-		Category category_; 
+		std::string name_;
+		Category category_;
 
-		MiscObject() : Object(Object::Type::MISC_OBJECT), model_(""), mass_(0.0), name_(""), 
-		category_(Category::NONE) {
+		MiscObject() : Object(Object::Type::MISC_OBJECT), model_(""), mass_(0.0), name_(""),
+					   category_(Category::NONE)
+		{
 			category_holder_ = static_cast<int>(category_);
 		}
 
@@ -431,31 +450,29 @@ namespace scenarioengine
 
 			return;
 		}
-
 	};
-	
+
 	class Entities
 	{
 	public:
-
-		Entities() {};
+		Entities(){};
 
 		void Print()
 		{
 			LOG("");
 		}
 
-		std::vector<Object*> object_;
+		std::vector<Object *> object_;
 
-		// create a sumo vehicle template and a sumo controller 
-		int addObject(Object* obj);
+		// create a sumo vehicle template and a sumo controller
+		int addObject(Object *obj);
 		void removeObject(int id);
 		void removeObject(std::string name);
 		int getNewId();
 		bool indexExists(int id);
 		bool nameExists(std::string name);
-		Object* GetObjectByName(std::string name);
-		Object* GetObjectById(int id);
+		Object *GetObjectByName(std::string name);
+		Object *GetObjectById(int id);
 	};
 
 }

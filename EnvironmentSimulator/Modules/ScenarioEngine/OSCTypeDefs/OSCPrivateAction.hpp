@@ -25,9 +25,9 @@
 namespace scenarioengine
 {
 
-	#define DISTANCE_TOLERANCE (0.5)  // meter
-	#define SYNCH_DISTANCE_TOLERANCE (1.0)  // meter
-	#define IS_ZERO(x) (x < SMALL_NUMBER && x > -SMALL_NUMBER)
+#define DISTANCE_TOLERANCE (0.5)	   // meter
+#define SYNCH_DISTANCE_TOLERANCE (1.0) // meter
+#define IS_ZERO(x) (x < SMALL_NUMBER && x > -SMALL_NUMBER)
 
 	class OSCPrivateAction : public OSCAction
 	{
@@ -73,7 +73,7 @@ namespace scenarioengine
 			DynamicsDimension dimension_;
 			double target_value_;
 
-			double Evaluate(double factor, double start_value, double end_value);  // 0 = start_value, 1 = end_value
+			double Evaluate(double factor, double start_value, double end_value); // 0 = start_value, 1 = end_value
 
 			TransitionDynamics() : shape_(DynamicsShape::STEP), dimension_(DynamicsDimension::TIME), target_value_(0) {}
 		};
@@ -88,20 +88,18 @@ namespace scenarioengine
 			LOG("Virtual, should be overridden");
 		};
 
-		virtual OSCPrivateAction* Copy()
+		virtual OSCPrivateAction *Copy()
 		{
 			LOG("Virtual, should be overridden");
 			return 0;
 		};
 
-		virtual void ReplaceObjectRefs(Object*, Object*) {};
-
+		virtual void ReplaceObjectRefs(Object *, Object *){};
 	};
 
 	class LongSpeedAction : public OSCPrivateAction
 	{
 	public:
-
 		TransitionDynamics transition_dynamics_;
 
 		class Target
@@ -134,14 +132,13 @@ namespace scenarioengine
 		class TargetRelative : public Target
 		{
 		public:
-
 			typedef enum
 			{
 				DELTA,
 				FACTOR
 			} ValueType;
 
-			Object* object_;
+			Object *object_;
 			ValueType value_type_;
 			bool continuous_;
 
@@ -154,7 +151,7 @@ namespace scenarioengine
 			double object_speed_;
 		};
 
-		Target* target_;
+		Target *target_;
 		double start_speed_;
 		double elapsed_;
 
@@ -163,7 +160,7 @@ namespace scenarioengine
 			elapsed_ = 0;
 		}
 
-		LongSpeedAction(const LongSpeedAction& action) : OSCPrivateAction(OSCPrivateAction::ActionType::LONG_SPEED)
+		LongSpeedAction(const LongSpeedAction &action) : OSCPrivateAction(OSCPrivateAction::ActionType::LONG_SPEED)
 		{
 			target_ = action.target_;
 			transition_dynamics_ = action.transition_dynamics_;
@@ -171,9 +168,9 @@ namespace scenarioengine
 			start_speed_ = action.start_speed_;
 		}
 
-		OSCPrivateAction* Copy()
+		OSCPrivateAction *Copy()
 		{
-			LongSpeedAction* new_action = new LongSpeedAction(*this);
+			LongSpeedAction *new_action = new LongSpeedAction(*this);
 			return new_action;
 		}
 
@@ -186,13 +183,12 @@ namespace scenarioengine
 			LOG("");
 		}
 
-		void ReplaceObjectRefs(Object* obj1, Object* obj2);
+		void ReplaceObjectRefs(Object *obj1, Object *obj2);
 	};
 
 	class LongDistanceAction : public OSCPrivateAction
 	{
 	public:
-
 		struct
 		{
 			bool none_;
@@ -214,10 +210,10 @@ namespace scenarioengine
 
 		LongDistanceAction() : OSCPrivateAction(OSCPrivateAction::ActionType::LONG_DISTANCE), target_object_(0), distance_(0), dist_type_(DistType::DISTANCE), freespace_(0), acceleration_(0)
 		{
-            dynamics_.max_acceleration_ = 0;
-            dynamics_.max_deceleration_ = 0;
-            dynamics_.max_speed_ = 0;
-            dynamics_.none_ = true;            
+			dynamics_.max_acceleration_ = 0;
+			dynamics_.max_deceleration_ = 0;
+			dynamics_.max_speed_ = 0;
+			dynamics_.none_ = true;
 		}
 
 		LongDistanceAction(const LongDistanceAction &action) : OSCPrivateAction(OSCPrivateAction::ActionType::LONG_DISTANCE)
@@ -230,7 +226,7 @@ namespace scenarioengine
 			acceleration_ = action.acceleration_;
 		}
 
-		OSCPrivateAction* Copy()
+		OSCPrivateAction *Copy()
 		{
 			LongDistanceAction *new_action = new LongDistanceAction(*this);
 			return new_action;
@@ -245,7 +241,7 @@ namespace scenarioengine
 			LOG("");
 		}
 
-		void ReplaceObjectRefs(Object* obj1, Object* obj2);
+		void ReplaceObjectRefs(Object *obj1, Object *obj2);
 
 	private:
 		double acceleration_;
@@ -280,12 +276,12 @@ namespace scenarioengine
 		class TargetRelative : public Target
 		{
 		public:
-			Object* object_;
+			Object *object_;
 
 			TargetRelative() : Target(Target::Type::RELATIVE), object_(0) {}
 		};
 
-		Target* target_;
+		Target *target_;
 		double start_t_;
 		double target_t_;
 		double target_lane_offset_;
@@ -301,7 +297,7 @@ namespace scenarioengine
 			t_ = 0;
 		}
 
-		LatLaneChangeAction(const LatLaneChangeAction& action) : OSCPrivateAction(OSCPrivateAction::ActionType::LAT_LANE_CHANGE)
+		LatLaneChangeAction(const LatLaneChangeAction &action) : OSCPrivateAction(OSCPrivateAction::ActionType::LAT_LANE_CHANGE)
 		{
 			transition_dynamics_ = action.transition_dynamics_;
 			target_ = action.target_;
@@ -313,9 +309,9 @@ namespace scenarioengine
 			t_ = action.t_;
 		}
 
-		OSCPrivateAction* Copy()
+		OSCPrivateAction *Copy()
 		{
-			LatLaneChangeAction* new_action = new LatLaneChangeAction(*this);
+			LatLaneChangeAction *new_action = new LatLaneChangeAction(*this);
 			return new_action;
 		}
 
@@ -323,7 +319,7 @@ namespace scenarioengine
 
 		void Start();
 
-		void ReplaceObjectRefs(Object* obj1, Object* obj2);
+		void ReplaceObjectRefs(Object *obj1, Object *obj2);
 	};
 
 	class LatLaneOffsetAction : public OSCPrivateAction
@@ -387,7 +383,7 @@ namespace scenarioengine
 			dynamics_ = action.dynamics_;
 		}
 
-		OSCPrivateAction* Copy()
+		OSCPrivateAction *Copy()
 		{
 			LatLaneOffsetAction *new_action = new LatLaneOffsetAction(*this);
 			return new_action;
@@ -396,7 +392,7 @@ namespace scenarioengine
 		void Start();
 		void Step(double dt, double simTime);
 
-		void ReplaceObjectRefs(Object* obj1, Object* obj2);
+		void ReplaceObjectRefs(Object *obj1, Object *obj2);
 	};
 
 	class SynchronizeAction : public OSCPrivateAction
@@ -410,7 +406,7 @@ namespace scenarioengine
 			STEADY_STATE_TIME
 		} SteadyStateType;
 
-		struct 
+		struct
 		{
 			SteadyStateType type_;
 			union
@@ -428,7 +424,7 @@ namespace scenarioengine
 		double tolerance_;
 		double tolerance_master_;
 
-		SynchronizeAction() : OSCPrivateAction(OSCPrivateAction::ActionType::SYNCHRONIZE) 
+		SynchronizeAction() : OSCPrivateAction(OSCPrivateAction::ActionType::SYNCHRONIZE)
 		{
 			master_object_ = 0;
 			final_speed_ = 0;
@@ -458,7 +454,7 @@ namespace scenarioengine
 			steadyState_ = action.steadyState_;
 		}
 
-		OSCPrivateAction* Copy()
+		OSCPrivateAction *Copy()
 		{
 			SynchronizeAction *new_action = new SynchronizeAction(*this);
 			return new_action;
@@ -477,7 +473,8 @@ namespace scenarioengine
 		void Start();
 
 	private:
-		typedef enum {
+		typedef enum
+		{
 			MODE_NONE,
 			MODE_LINEAR,
 			MODE_NON_LINEAR,
@@ -487,7 +484,8 @@ namespace scenarioengine
 			MODE_STEADY_STATE
 		} SynchMode;
 
-		typedef enum {
+		typedef enum
+		{
 			SUBMODE_NONE,
 			SUBMODE_CONVEX,
 			SUBMODE_CONCAVE
@@ -497,17 +495,15 @@ namespace scenarioengine
 		SynchSubmode submode_;
 
 		// Store calculated distances to use for comparison
-		double lastDist_;  
+		double lastDist_;
 		double lastMasterDist_;
 
 		double CalcSpeedForLinearProfile(double v_final, double time, double dist);
-		void PrintStatus(const char* custom_msg);
-		const char* Mode2Str(SynchMode mode);
-		const char* SubMode2Str(SynchSubmode submode);
+		void PrintStatus(const char *custom_msg);
+		const char *Mode2Str(SynchMode mode);
+		const char *SubMode2Str(SynchSubmode submode);
 
-
-
-		void ReplaceObjectRefs(Object* obj1, Object* obj2)
+		void ReplaceObjectRefs(Object *obj1, Object *obj2)
 		{
 			if (object_ == obj1)
 			{
@@ -527,13 +523,13 @@ namespace scenarioengine
 		roadmanager::Position *position_;
 
 		TeleportAction() : OSCPrivateAction(OSCPrivateAction::ActionType::TELEPORT) {}
-		
-		TeleportAction(const TeleportAction &action) : OSCPrivateAction(OSCPrivateAction::ActionType::TELEPORT) 
+
+		TeleportAction(const TeleportAction &action) : OSCPrivateAction(OSCPrivateAction::ActionType::TELEPORT)
 		{
 			position_ = action.position_;
 		}
 
-		OSCPrivateAction* Copy()
+		OSCPrivateAction *Copy()
 		{
 			TeleportAction *new_action = new TeleportAction(*this);
 			return new_action;
@@ -542,7 +538,7 @@ namespace scenarioengine
 		void Step(double dt, double simTime);
 		void Start();
 
-		void ReplaceObjectRefs(Object* obj1, Object* obj2);
+		void ReplaceObjectRefs(Object *obj1, Object *obj2);
 	};
 
 	class AssignRouteAction : public OSCPrivateAction
@@ -552,14 +548,14 @@ namespace scenarioengine
 
 		AssignRouteAction() : OSCPrivateAction(OSCPrivateAction::ActionType::ASSIGN_ROUTE) {}
 
-		AssignRouteAction(const AssignRouteAction&action) : OSCPrivateAction(OSCPrivateAction::ActionType::ASSIGN_ROUTE)
+		AssignRouteAction(const AssignRouteAction &action) : OSCPrivateAction(OSCPrivateAction::ActionType::ASSIGN_ROUTE)
 		{
 			route_ = action.route_;
 		}
 
-		OSCPrivateAction* Copy()
+		OSCPrivateAction *Copy()
 		{
-			AssignRouteAction* new_action = new AssignRouteAction(*this);
+			AssignRouteAction *new_action = new AssignRouteAction(*this);
 			return new_action;
 		}
 
@@ -572,28 +568,29 @@ namespace scenarioengine
 		void Start();
 		void End();
 
-		void ReplaceObjectRefs(Object* obj1, Object* obj2);
+		void ReplaceObjectRefs(Object *obj1, Object *obj2);
 	};
 
 	class FollowTrajectoryAction : public OSCPrivateAction
 	{
 	public:
-		typedef enum {
+		typedef enum
+		{
 			NONE,
 			TIMING_RELATIVE,
 			TIMING_ABSOLUTE
 		} TimingDomain;
 
-		roadmanager::Trajectory* traj_;
+		roadmanager::Trajectory *traj_;
 		TimingDomain timing_domain_;
 		double timing_scale_;
 		double timing_offset_;
 		double time_;
 
-		FollowTrajectoryAction() : traj_(0), timing_domain_(TimingDomain::NONE), timing_scale_(1), 
-			timing_offset_(0), time_(0), OSCPrivateAction(OSCPrivateAction::ActionType::FOLLOW_TRAJECTORY) {}
+		FollowTrajectoryAction() : traj_(0), timing_domain_(TimingDomain::NONE), timing_scale_(1),
+								   timing_offset_(0), time_(0), OSCPrivateAction(OSCPrivateAction::ActionType::FOLLOW_TRAJECTORY) {}
 
-		FollowTrajectoryAction(const FollowTrajectoryAction& action) : OSCPrivateAction(OSCPrivateAction::ActionType::FOLLOW_TRAJECTORY)
+		FollowTrajectoryAction(const FollowTrajectoryAction &action) : OSCPrivateAction(OSCPrivateAction::ActionType::FOLLOW_TRAJECTORY)
 		{
 			traj_ = action.traj_;
 			timing_domain_ = action.timing_domain_;
@@ -602,9 +599,9 @@ namespace scenarioengine
 			time_ = 0;
 		}
 
-		OSCPrivateAction* Copy()
+		OSCPrivateAction *Copy()
 		{
-			FollowTrajectoryAction* new_action = new FollowTrajectoryAction(*this);
+			FollowTrajectoryAction *new_action = new FollowTrajectoryAction(*this);
 			return new_action;
 		}
 
@@ -613,31 +610,30 @@ namespace scenarioengine
 		void Start();
 		void End();
 
-		void ReplaceObjectRefs(Object* obj1, Object* obj2);
+		void ReplaceObjectRefs(Object *obj1, Object *obj2);
 	};
 
 	class AssignControllerAction : public OSCPrivateAction
 	{
 	public:
-		Controller* controller_;
+		Controller *controller_;
 
-		AssignControllerAction(Controller *controller): controller_(controller),
-			OSCPrivateAction(OSCPrivateAction::ActionType::ASSIGN_CONTROLLER) {}
+		AssignControllerAction(Controller *controller) : controller_(controller),
+														 OSCPrivateAction(OSCPrivateAction::ActionType::ASSIGN_CONTROLLER) {}
 
-		AssignControllerAction(const AssignControllerAction& action) : OSCPrivateAction(OSCPrivateAction::ActionType::ASSIGN_CONTROLLER) 
+		AssignControllerAction(const AssignControllerAction &action) : OSCPrivateAction(OSCPrivateAction::ActionType::ASSIGN_CONTROLLER)
 		{
 			controller_ = action.controller_;
 		};
 
-		OSCPrivateAction* Copy()
+		OSCPrivateAction *Copy()
 		{
-			AssignControllerAction* new_action = new AssignControllerAction(*this);
+			AssignControllerAction *new_action = new AssignControllerAction(*this);
 			return new_action;
 		}
 
-		void Step(double, double) { } 
+		void Step(double, double) {}
 		void Start();
-
 	};
 
 	class ActivateControllerAction : public OSCPrivateAction
@@ -649,25 +645,24 @@ namespace scenarioengine
 		Default constructor assuming both domains (lat/long) activated
 		@param domainMask bitmask according to Controller::Domain type
 		*/
-		ActivateControllerAction() : domainMask_(Controller::Domain::CTRL_BOTH), 
-			OSCPrivateAction(OSCPrivateAction::ActionType::ACTIVATE_CONTROLLER) {}
+		ActivateControllerAction() : domainMask_(Controller::Domain::CTRL_BOTH),
+									 OSCPrivateAction(OSCPrivateAction::ActionType::ACTIVATE_CONTROLLER) {}
 
 		/**
 		Constructor with domain specification
 		@param domainMask bitmask according to Controller::Domain type
 		*/
-		ActivateControllerAction(int domainMask) : domainMask_(domainMask), 
-			OSCPrivateAction(OSCPrivateAction::ActionType::ACTIVATE_CONTROLLER) {}
+		ActivateControllerAction(int domainMask) : domainMask_(domainMask),
+												   OSCPrivateAction(OSCPrivateAction::ActionType::ACTIVATE_CONTROLLER) {}
 
-		ActivateControllerAction(const ActivateControllerAction& action) : 
-			OSCPrivateAction(OSCPrivateAction::ActionType::ACTIVATE_CONTROLLER)
+		ActivateControllerAction(const ActivateControllerAction &action) : OSCPrivateAction(OSCPrivateAction::ActionType::ACTIVATE_CONTROLLER)
 		{
 			domainMask_ = action.domainMask_;
 		}
 
-		OSCPrivateAction* Copy()
+		OSCPrivateAction *Copy()
 		{
-			ActivateControllerAction* new_action = new ActivateControllerAction(*this);
+			ActivateControllerAction *new_action = new ActivateControllerAction(*this);
 			return new_action;
 		}
 
@@ -687,7 +682,7 @@ namespace scenarioengine
 			OSCAction::Start();
 		}
 
-		void Step(double, double) {}  
+		void Step(double, double) {}
 
 		void End()
 		{
@@ -702,29 +697,120 @@ namespace scenarioengine
 	class VisibilityAction : public OSCPrivateAction
 	{
 	public:
-
 		bool graphics_;
 		bool traffic_;
 		bool sensors_;
 
 		VisibilityAction() : graphics_(true), traffic_(true), sensors_(true),
-			OSCPrivateAction(OSCPrivateAction::ActionType::VISIBILITY) {}
+							 OSCPrivateAction(OSCPrivateAction::ActionType::VISIBILITY) {}
 
-		VisibilityAction(const VisibilityAction& action) : graphics_(true), traffic_(true), sensors_(true),
-			OSCPrivateAction(OSCPrivateAction::ActionType::VISIBILITY)
+		VisibilityAction(const VisibilityAction &action) : graphics_(true), traffic_(true), sensors_(true),
+														   OSCPrivateAction(OSCPrivateAction::ActionType::VISIBILITY)
 		{
 			graphics_ = action.graphics_;
 			traffic_ = action.traffic_;
 			sensors_ = action.sensors_;
 		}
 
-		OSCPrivateAction* Copy()
+		OSCPrivateAction *Copy()
 		{
-			VisibilityAction* new_action = new VisibilityAction(*this);
+			VisibilityAction *new_action = new VisibilityAction(*this);
 			return new_action;
 		}
 
 		void Step(double dt, double simTime);
 		void Start();
 	};
+
+	class OverrideControlAction : public OSCPrivateAction
+	{
+	public:
+		typedef enum
+		{
+			THROTTLE,
+			BRAKE,
+			CLUTCH,
+			PARKINGBRAKE,
+			STEERINGWHEEL,
+			GEAR,
+			UNDEFINED
+		} OverrideControllerType;
+
+		double value_;
+		bool active_;
+		OverrideControllerType type_;
+
+		OverrideControlAction(double value, bool active, OverrideControllerType type) : OSCPrivateAction(OSCPrivateAction::ActionType::CONTROLLER),
+																						type_(type), value_(value), active_(active) {}
+		OverrideControlAction(OverrideControllerType type) : OverrideControlAction(0, false, type){}
+		OverrideControlAction() : OverrideControlAction(0, false, OverrideControllerType::UNDEFINED){}
+		~OverrideControlAction() {}
+		void Step(double dt, double simTime);
+		void Start();
+		void End();
+		OSCPrivateAction *Copy()
+		{
+			OverrideControlAction *new_action = new OverrideControlAction(*this);
+			return new_action;
+		}
+		// Input value range: [0..1] for Throttle, Brake, Clutch and ParkingBrake. [-2*PI..2*PI] for SteeringWheel. [-1,0,1,2,3,4,5,6,7,8] for Gear.
+		// Function will cut the value to the near limit if the value is beyond limit and round the value in Gear case.
+		static void RangeCheckAndErrorLog(const pugi::char_t *name, double &valueCheck, double upperLimit = 1.0, double lowerLimit = 0.0, bool ifRound = false);
+	};
+
+	//Defines the state of the throttle of a vehicle, when overriding a throttle value in a ControllerAction.
+	//value_ Throttle pedal value. Range: [0..1].0 represents 0%, 1 represents 100% of pressing the throttle pedal.
+	//active_ True: override; false: stop overriding.
+	class OverrideThrottleAction : public OverrideControlAction
+	{
+	public:
+		OverrideThrottleAction() : OverrideControlAction(OverrideControllerType::THROTTLE) {}
+		OverrideThrottleAction(double value, bool active, OverrideControllerType type = THROTTLE) : OverrideControlAction(value, active, OverrideControllerType::THROTTLE) {}
+	};
+	//Defines the state of the brake of a vehicle, when overriding a brake value in a ControllerAction.
+	//value_ Brake pedal value. Range: [0..1]. 0 represents 0%, 1 represents 100% of pressing the brake pedal.
+	//active_ True: override; false: stop overriding.
+	class OverrideBrakeAction : public OverrideControlAction
+	{
+	public:
+		OverrideBrakeAction() : OverrideControlAction(OverrideControllerType::BRAKE) {}
+		OverrideBrakeAction(double value, bool active, OverrideControllerType type = BRAKE) : OverrideControlAction(value, active, OverrideControllerType::BRAKE) {}
+	};
+	//Defines the state of the clutch of a vehicle, when overriding a clutch value in a ControllerAction.
+	//value_ Clutch pedal value. Range: [0..1]. 0 represents 0%, 1 represents 100% of pressing the clutch pedal.
+	//active_ True: override; false: stop overriding.
+	class OverrideClutchAction : public OverrideControlAction
+	{
+	public:
+		OverrideClutchAction() : OverrideControlAction(OverrideControllerType::CLUTCH) {}
+		OverrideClutchAction(double value, bool active, OverrideControllerType type = CLUTCH) : OverrideControlAction(value, active, OverrideControllerType::CLUTCH) {}
+	};
+	//Defines the state of the parking brake of a vehicle, when overriding a parking brake value in a ControllerAction.
+	//value_ Parking brake value. Unit: %; Range: [0..1]. The value 1 represent the maximum parking brake state.
+	//active_ True: override; false: stop overriding.
+	class OverrideParkingBrakeAction : public OverrideControlAction
+	{
+	public:
+		OverrideParkingBrakeAction() : OverrideControlAction(OverrideControllerType::PARKINGBRAKE) {}
+		OverrideParkingBrakeAction(double value, bool active, OverrideControllerType type = PARKINGBRAKE) : OverrideControlAction(value, active, OverrideControllerType::PARKINGBRAKE) {}
+	};
+	//Defines the state of the steering wheel of a vehicle, when overriding a steering wheel angle in a ControllerAction.
+	//value_ Steering wheel angle. Unit: rad.
+	//active_ True: override; false: stop overriding.
+	class OverrideSteeringWheelAction : public OverrideControlAction
+	{
+	public:
+		OverrideSteeringWheelAction() : OverrideControlAction(OverrideControllerType::STEERINGWHEEL) {}
+		OverrideSteeringWheelAction(double value, bool active, OverrideControllerType type = STEERINGWHEEL) : OverrideControlAction(value, active, OverrideControllerType::STEERINGWHEEL) {}
+	};
+	//Defines the state of the gear of a vehicle, when overriding a gear value in a ControllerAction.
+	//value_ Gear number.
+	//active_ True: override; false: stop overriding.
+	class OverrideGearAction : public OverrideControlAction
+	{
+	public:
+		OverrideGearAction() : OverrideControlAction(OverrideControllerType::GEAR) {}
+		OverrideGearAction(double value, bool active, OverrideControllerType type = GEAR) : OverrideControlAction(value, active, OverrideControllerType::GEAR) {}
+	};
+
 }

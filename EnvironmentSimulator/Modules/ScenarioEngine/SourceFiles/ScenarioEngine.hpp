@@ -64,6 +64,8 @@ namespace scenarioengine
 		void SetSimulationTime(double time) { simulationTime_ = time; }
 		double* GetSimulationTimePtr() { return &simulationTime_; }
 
+		std::vector<OSCPrivateAction*> *GetPrivateAction(){return &init.private_action_;} //?
+
 	private:
 		// OpenSCENARIO parameters
 		Catalogs catalogs;
