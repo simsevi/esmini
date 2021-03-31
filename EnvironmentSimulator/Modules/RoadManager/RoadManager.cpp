@@ -70,9 +70,22 @@ using namespace roadmanager;
 #define OSI_TANGENT_LINE_TOLERANCE 0.01 // [m]
 
 
-int g_Lane_id;
-int g_Laneb_id;
+static int g_Lane_id;
+static int g_Laneb_id;
 
+int roadmanager::GetNewGlobalLaneId()
+{
+	int returnvalue = g_Lane_id;
+	g_Lane_id++;
+	return returnvalue;
+}
+
+int roadmanager::GetNewGlobalLaneBoundaryId()
+{
+	int returnvalue = g_Laneb_id;
+	g_Laneb_id++;
+	return returnvalue;
+}
 
 double Polynomial::Evaluate(double p)
 {
@@ -526,22 +539,20 @@ void LaneLink::Print()
 	LOG("LaneLink type: %d id: %d\n", type_, id_);
 }
 
+
 void Lane::SetGlobalId()
 { 
-	global_id_ = g_Lane_id; 
-	g_Lane_id++; 
+	global_id_ = GetNewGlobalLaneId(); 
 }
 
 void LaneBoundaryOSI::SetGlobalId()
 {  
-	global_id_ = g_Laneb_id; 
-	g_Laneb_id++; 
+	global_id_ = GetNewGlobalLaneBoundaryId(); 
 }
 
 void LaneRoadMarkTypeLine::SetGlobalId()
 {  
-	global_id_ = g_Laneb_id; 
-	g_Laneb_id++;
+	global_id_ = GetNewGlobalLaneBoundaryId(); 
 }
 
 LaneWidth *Lane::GetWidthByIndex(int index)
@@ -1667,6 +1678,21 @@ Lane* Road::GetDrivingLaneByIdx(double s, int idx)
 
 	return 0;
 }
+
+Lane* Road::GetDrivingLaneById(double s, int id)
+{
+	int count = 0;
+
+	LaneSection *ls = GetLaneSectionByS(s);
+
+	if (ls->GetLaneById(id)->IsDriving())
+	{
+		return ls->GetLaneById(id);
+	}
+
+	return 0;
+}
+
 
 int Road::GetNumberOfDrivingLanesSide(double s, int side)
 {
@@ -4094,12 +4120,21 @@ void OpenDrive::SetLaneOSIPoints()
 	double s0, s1, s1_prev;
 	bool osi_requirement;
 	double max_segment_length = SE_Env::Inst().GetOSIMaxLongitudinalDistance();
-
+	bool isosiintersection;
 	// Looping through each road 
 	for (int i=0; i<road_.size(); i++)
 	{
 		road = road_[i];
 		
+		if (road->GetJunction() == -1) // add check here for highway somehow
+		{
+			isosiintersection = false;
+		}
+		else
+		{
+			isosiintersection = true;
+		}
+
 		if (road->GetNumberOfSuperElevations() > 0)
 		{
 			// If road has lateral profile, then increase sampling resolution
@@ -4243,6 +4278,7 @@ void OpenDrive::SetLaneOSIPoints()
 
 				// Set all collected osi points for the current lane
 				lane->osi_points_.Set(osi_point);
+				lane->SetOSIIntersection(isosiintersection);
 
 				// Clear osi collectors for next iteration
 				osi_point.clear();
