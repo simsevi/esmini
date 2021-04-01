@@ -614,88 +614,113 @@ int OSIReporter::UpdateOSIIntersection()
 	roadmanager::Road *connecting_road;
 	roadmanager::ContactPointType contactpoint;
 	roadmanager::RoadLink *roadlink;
-	roadmanager::Lane *lane;
+
+	// s values to know where on the road to check for the lanes
+	double incomming_s_value;
+	double outgoing_s_value;
+	double connecting_incomming_s_value;
+	double connecting_outgoing_s_value;
+	// value for the linktype for the connecting road and the outgoing road
+	roadmanager::LinkType connecting_road_link_type;
+	// value for the linktype for the incomming road and the connecting road
+	roadmanager::LinkType incomming_road_link_type;
+
 	static roadmanager::OpenDrive* opendrive = roadmanager::Position::GetOpenDrive();
-	osi3::Lane* osi_lane = 0;
+	osi3::Lane* osi_lane;
 	for (int i=0; i<opendrive->GetNumOfJunctions(); i++)
 	{
-		junction = opendrive->GetJunctionByIdx(i); 
-		double incomming_s_value;
-		double outgoing_s_value;
-		double connecting_incomming_s_value;
-		double connecting_outgoing_s_value;
-		roadmanager::LinkType connecting_link_type;
-		osi_lane = obj_osi_internal.gt->add_lane();
-		
-		osi_lane->mutable_id()->set_value(roadmanager::GetNewGlobalLaneId());
-		osi_lane->mutable_classification()->set_type(osi3::Lane_Classification_Type::Lane_Classification_Type_TYPE_INTERSECTION);
 		// //add check if it is an intersection or an highway exit/entry
-		for (int j=0; j<junction->GetNumberOfConnections();j++){
-			connection = junction->GetConnectionByIdx(j);
-			incomming_road = connection->GetIncomingRoad();
-			connecting_road = connection->GetConnectingRoad();
-			connecting_link_type = roadmanager::LinkType::SUCCESSOR;
+		junction = opendrive->GetJunctionByIdx(i);
+		
+		// check if the first road is of type highway, then assumes it is not a intersection 
+		if (junction->IsOsiIntersection())
+		{
+
+			// genereric data for the junction
+			osi_lane = obj_osi_internal.gt->add_lane();
+			osi_lane->mutable_id()->set_value(roadmanager::GetNewGlobalLaneId());
+			osi_lane->mutable_classification()->set_type(osi3::Lane_Classification_Type::Lane_Classification_Type_TYPE_INTERSECTION);
 			
-			if (incomming_road->GetLink(connecting_link_type) != 0) 
-			{
-				if (incomming_road->GetLink(connecting_link_type)->GetElementId() == connecting_road->GetJunction())
+				
+
+			// check all connections in the junction
+			for (int j=0; j<junction->GetNumberOfConnections();j++){
+				connection = junction->GetConnectionByIdx(j);
+				incomming_road = connection->GetIncomingRoad();
+				connecting_road = connection->GetConnectingRoad();
+
+				// get needed info about the incomming road
+				if (incomming_road->GetLink(roadmanager::LinkType::SUCCESSOR) != 0) 
 				{
-					incomming_s_value = incomming_road->GetLength();
+					if (incomming_road->GetLink(roadmanager::LinkType::SUCCESSOR)->GetElementId() == connecting_road->GetJunction())
+					{
+						incomming_s_value = incomming_road->GetLength();
+						incomming_road_link_type = roadmanager::LinkType::SUCCESSOR;
+					}
+					else
+					{
+						incomming_s_value = 0;
+						incomming_road_link_type = roadmanager::LinkType::PREDECESSOR;
+					}
 				}
 				else
 				{
 					incomming_s_value = 0;
+					incomming_road_link_type = roadmanager::LinkType::PREDECESSOR;
 				}
-			}
-			else
-			{
-				incomming_s_value = 0;
-			}
-			
-			contactpoint = connection->GetContactPoint();
-			if (contactpoint == roadmanager::ContactPointType::CONTACT_POINT_START)
-			{
-				roadlink = connecting_road->GetLink(roadmanager::LinkType::SUCCESSOR);
-				connecting_outgoing_s_value = connecting_road->GetLength();
-				connecting_link_type = roadmanager::LinkType::SUCCESSOR;
-			} 
-			else if (contactpoint == roadmanager::ContactPointType::CONTACT_POINT_END)
-			{
-				roadlink = connecting_road->GetLink(roadmanager::LinkType::PREDECESSOR);
-				connecting_outgoing_s_value = 0;
-				connecting_link_type = roadmanager::LinkType::SUCCESSOR;
-			}
-			else
-			{
-				LOG("Unknow connection detected**************************");
-			}
-			outgoing_road = opendrive->GetRoadById(roadlink->GetElementId());
+				
+				// Get info about the connecting road, and to get the correct outgoing road
+				contactpoint = connection->GetContactPoint();
+				if (contactpoint == roadmanager::ContactPointType::CONTACT_POINT_START)
+				{
+					connecting_road_link_type = roadmanager::LinkType::SUCCESSOR;
+					roadlink = connecting_road->GetLink(connecting_road_link_type);
+					connecting_outgoing_s_value = connecting_road->GetLength();
+					
+				} 
+				else if (contactpoint == roadmanager::ContactPointType::CONTACT_POINT_END)
+				{
+					connecting_road_link_type = roadmanager::LinkType::PREDECESSOR;
+					roadlink = connecting_road->GetLink(connecting_road_link_type);
+					connecting_outgoing_s_value = 0;
+					
+				}
+				else
+				{
+					LOG("WARNING: Unknow connection detected, OSI junction might get corrupted");
+				}
+				outgoing_road = opendrive->GetRoadById(roadlink->GetElementId());
 
-			if (outgoing_road->GetLink(roadmanager::LinkType::SUCCESSOR) != 0 )
+				// Get neccesary info about the outgoing road
+				if (outgoing_road->GetLink(roadmanager::LinkType::SUCCESSOR) != 0 )
 				{
-				if (outgoing_road->GetLink(roadmanager::LinkType::SUCCESSOR)->GetElementId() == connecting_road->GetJunction())
-				{
-					outgoing_s_value = outgoing_road->GetLength();
+					if (outgoing_road->GetLink(roadmanager::LinkType::SUCCESSOR)->GetElementId() == connecting_road->GetJunction())
+					{
+						outgoing_s_value = outgoing_road->GetLength();
+					}
+					else
+					{
+						outgoing_s_value = 0;
+					}
 				}
 				else
 				{
 					outgoing_s_value = 0;
 				}
-			}
-			else
-			{
-				outgoing_s_value = 0;
-			}
 
+				// create all lane parings for the junction
+				for (int l=0; l<connection->GetNumberOfLaneLinks();l++){
+					junctionlanelink = connection->GetLaneLink(l);
+					if ((incomming_road_link_type == roadmanager::LinkType::SUCCESSOR && junctionlanelink->from_ < 0) ||
+						(incomming_road_link_type == roadmanager::LinkType::PREDECESSOR && junctionlanelink->from_ > 0))
+					{
+						osi3::Lane_Classification_LanePairing *laneparing = osi_lane->mutable_classification()->add_lane_pairing();
+						laneparing->mutable_antecessor_lane_id()->set_value(incomming_road->GetDrivingLaneById(incomming_s_value,junctionlanelink->from_)->GetGlobalId());				
+						laneparing->mutable_successor_lane_id()->set_value(outgoing_road->GetDrivingLaneById(outgoing_s_value,connecting_road->GetDrivingLaneById(connecting_outgoing_s_value, junctionlanelink->to_)->GetLink(connecting_road_link_type)->GetId())->GetGlobalId());
+					}
+				}
 
-			LOG("connection %i is for incomming road %d, and outgoing road %d",j,incomming_road->GetId(),outgoing_road->GetId());
-			//connecting_road->GetLink();
-
-			for (int l=0; l<connection->GetNumberOfLaneLinks();l++){
-				junctionlanelink = connection->GetLaneLink(l);
-				osi3::Lane_Classification_LanePairing *laneparing = osi_lane->mutable_classification()->add_lane_pairing();
-				laneparing->mutable_antecessor_lane_id()->set_value(incomming_road->GetDrivingLaneById(incomming_s_value,junctionlanelink->from_)->GetGlobalId());				
-				laneparing->mutable_successor_lane_id()->set_value(outgoing_road->GetDrivingLaneById(outgoing_s_value,connecting_road->GetDrivingLaneById(connecting_outgoing_s_value, junctionlanelink->to_)->GetLink(connecting_link_type)->GetId())->GetGlobalId());
+				//TODO: add the correct laneboundaries for the junction
 			}
 		}
 	}

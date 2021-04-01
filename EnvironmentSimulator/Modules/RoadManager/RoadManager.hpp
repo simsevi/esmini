@@ -944,6 +944,8 @@ namespace roadmanager
 		int GetJunction() { return junction_; }
 		void AddLink(RoadLink *link) { link_.push_back(link); }
 		void AddRoadType(RoadTypeEntry *type) { type_.push_back(type); }
+		int GetNumberOfRoadTypes() {return (int)type_.size();}
+		RoadTypeEntry *GetRoadType(int idx) {return type_[idx];}
 		RoadLink *GetLink(LinkType type);
 		void AddLine(Line *line);
 		void AddArc(Arc *arc);
@@ -1068,7 +1070,7 @@ namespace roadmanager
 		Connection *GetConnectionByIdx(int idx) { return connection_[idx]; }
 		int GetConnectingRoadIdFromIncomingRoadId(int incomingRoadId, int index);
 		void Print();
-
+		bool IsOsiIntersection();
 	private:
 		std::vector<Connection*> connection_;
 		int id_;

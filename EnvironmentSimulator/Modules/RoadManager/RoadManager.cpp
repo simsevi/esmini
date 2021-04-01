@@ -3127,6 +3127,19 @@ LaneRoadLaneConnection Junction::GetRoadConnectionByIdx(int roadId, int laneId, 
 	return lane_road_lane_connection;
 }
 
+bool Junction::IsOsiIntersection()
+{
+	if (connection_[0]->GetIncomingRoad()->GetRoadType(0)->road_type_ == roadmanager::RoadType::ROADTYPE_MOTORWAY)
+	{
+		return false;
+	} 
+	else
+	{
+		return true;
+	}
+	
+}
+
 int Junction::GetNoConnectionsFromRoadId(int incomingRoadId)
 {
 	int counter = 0;
@@ -4126,13 +4139,13 @@ void OpenDrive::SetLaneOSIPoints()
 	{
 		road = road_[i];
 		
-		if (road->GetJunction() == -1) // add check here for highway somehow
+		if (road->GetJunction() == -1) 
 		{
 			isosiintersection = false;
 		}
 		else
 		{
-			isosiintersection = true;
+			isosiintersection = GetJunctionById(road->GetJunction())->IsOsiIntersection();
 		}
 
 		if (road->GetNumberOfSuperElevations() > 0)
