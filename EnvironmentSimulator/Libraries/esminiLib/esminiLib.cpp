@@ -133,6 +133,21 @@ static void copyStateFromScenarioGateway(SE_ScenarioObjectState *state, ObjectSt
 	state->objectCategory = gw_state->info.obj_category;
 }
 
+static void copyOverrideActionListfromScenarioEngine(SE_OverrideActionList *list, OSCPrivateAction *privateAction)
+{
+	list->throttle.active = privateAction->object_->OverrideActionList.throttle.active;
+	list->throttle.value = privateAction->object_->OverrideActionList.throttle.value;
+	list->brake.active = privateAction->object_->OverrideActionList.brake.active;
+	list->brake.value = privateAction->object_->OverrideActionList.brake.value;
+	list->clutch.active = privateAction->object_->OverrideActionList.clutch.active;
+	list->clutch.value = privateAction->object_->OverrideActionList.clutch.value;
+	list->parkingBrake.active = privateAction->object_->OverrideActionList.parkingBrake.active;
+	list->parkingBrake.value = privateAction->object_->OverrideActionList.parkingBrake.value;
+	list->steeringWheel.active = privateAction->object_->OverrideActionList.steeringWheel.active;
+	list->steeringWheel.value = privateAction->object_->OverrideActionList.steeringWheel.value;
+	list->gear.active = privateAction->object_->OverrideActionList.gear.active;
+	list->gear.value = privateAction->object_->OverrideActionList.gear.value;
+}
 static int GetRoadInfoAtDistance(int object_id, float lookahead_distance, SE_RoadInfo *r_data, int lookAheadMode)
 {
 	roadmanager::RoadProbeInfo s_data;
@@ -832,6 +847,17 @@ extern "C"
 		return 0;
 	}
 
+	SE_DLL_API int SE_GetOverrideActionStatus(int index, SE_OverrideActionList *list)
+	{
+		if (player && index >= 0 && index < player->scenarioGateway->getNumberOfObjects())
+		{
+			OSCPrivateAction *privateAction = (*player->scenarioEngine->GetPrivateAction())[index];
+			copyOverrideActionListfromScenarioEngine(list, privateAction);
+			return 0;
+		}
+		return -1;
+	}
+	
 	SE_DLL_API const char* SE_GetObjectName(int index)
 	{
 		if (player && index >= 0 && index < player->scenarioGateway->getNumberOfObjects())
