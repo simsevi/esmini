@@ -466,6 +466,14 @@ extern "C"
 	SE_DLL_API int SE_GetObjectState(int index, SE_ScenarioObjectState* state);
 
 	/**
+		Get the overrideActionStatus of specified object
+		@param objectId ID of the object.
+		@param list Pointer/reference to a SE_OverrideActionList struct to be filled in
+		@return 0 if successful, -1 if not
+	*/
+	SE_DLL_API int SE_GetOverrideActionStatus(int objectId, SE_OverrideActionList *list);
+
+	/**
 		Get the name of specified object
 		@param index Index of the object. Note: not ID
 		@return Name
