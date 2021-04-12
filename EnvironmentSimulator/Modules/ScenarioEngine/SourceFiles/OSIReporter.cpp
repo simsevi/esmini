@@ -902,10 +902,18 @@ int OSIReporter::UpdateOSIIntersection()
 							if (i!=j)
 							{
 								int same_points = roadmanager::CheckOverlapingOSIPoints(lane_lengths[i].osipoints,lane_lengths[j].osipoints,tolerance);
-								if (same_points == 2)
+								if (same_points >0)
 								{
-									ids_to_remove.push_back(i);
-									continue;
+									if (lane_lengths[i].length < lane_lengths[j].length)
+									{
+										ids_to_remove.push_back(j);
+									}
+									else
+									{
+										ids_to_remove.push_back(i);
+										continue;
+									}
+
 								}
 							}
 						}
