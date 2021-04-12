@@ -66,7 +66,7 @@ using namespace roadmanager;
 
 #define CURV_ZERO 0.00001
 #define MAX_TRACK_DIST 10
-#define OSI_POINT_CALC_STEPSIZE 1 // [m]
+#define OSI_POINT_CALC_STEPSIZE 0.1 // [m]
 #define OSI_TANGENT_LINE_TOLERANCE 0.01 // [m]
 
 
@@ -86,6 +86,40 @@ int roadmanager::GetNewGlobalLaneBoundaryId()
 	g_Laneb_id++;
 	return returnvalue;
 }
+
+int roadmanager::CheckOverlapingOSIPoints(OSIPoints* first_set, OSIPoints* second_set, double tolerance)
+{
+	std::vector<double> distances;
+	int retvalue = 0;
+	distances.push_back(PointDistance2D(first_set->GetPoint(0).x,
+									first_set->GetPoint(0).y,
+									second_set->GetPoint(0).x,
+									second_set->GetPoint(0).y));
+	distances.push_back(PointDistance2D(first_set->GetPoint(0).x,
+									first_set->GetPoint(0).y,
+									second_set->GetPoint(second_set->GetNumOfOSIPoints()-1).x,
+									second_set->GetPoint(second_set->GetNumOfOSIPoints()-1).y));
+	distances.push_back(PointDistance2D(first_set->GetPoint(first_set->GetNumOfOSIPoints()-1).x,
+									first_set->GetPoint(first_set->GetNumOfOSIPoints()-1).y,
+									second_set->GetPoint(0).x,
+									second_set->GetPoint(0).y));
+	distances.push_back(PointDistance2D(first_set->GetPoint(first_set->GetNumOfOSIPoints()-1).x,
+									first_set->GetPoint(first_set->GetNumOfOSIPoints()-1).y,
+									second_set->GetPoint(second_set->GetNumOfOSIPoints()-1).x,
+									second_set->GetPoint(second_set->GetNumOfOSIPoints()-1).y));
+
+
+	for (int i=0; i<distances.size();i++)
+	{
+		if (distances[i] < tolerance)
+		{
+			retvalue++;
+		}
+	}
+
+	return retvalue;
+}
+
 
 double Polynomial::Evaluate(double p)
 {
@@ -184,6 +218,16 @@ double OSIPoints::GetZfromIdx(int i)
 int OSIPoints::GetNumOfOSIPoints() 
 {
 	return (int)point_.size();
+}
+
+double OSIPoints::GetLength()
+{
+	double length = 0;
+	for (int i=0; i<point_.size()-1; i++)
+	{
+		length += PointDistance2D(point_[i].x,point_[i].y,point_[i+1].x,point_[i+1].y);
+	}
+	return length;
 }
 
 void Geometry::Print()

@@ -27,6 +27,7 @@ namespace roadmanager
 	int GetNewGlobalLaneId();
 	int GetNewGlobalLaneBoundaryId();
 
+	
 	class Polynomial
 	{
 	public:
@@ -75,10 +76,16 @@ namespace roadmanager
 			double GetYfromIdx(int i);
 			double GetZfromIdx(int i);
 			int GetNumOfOSIPoints();
+			double GetLength();
 
 		private:
 			std::vector<OSIPointStruct> point_;
 	};
+	/**
+		function that checks if two sets of osi points has the same start/end
+		@return the number of points that are within tolerance (0,1 or 2)
+	*/
+	int CheckOverlapingOSIPoints(OSIPoints* first_set, OSIPoints* second_set, double tolerance);
 
 	class Geometry
 	{
@@ -352,7 +359,7 @@ namespace roadmanager
 		double GetLength() {return length_;}
 		double GetSpace() {return space_;}
 		double GetWidth() {return width_;}
-		OSIPoints GetOSIPoints() {return osi_points_;}
+		OSIPoints* GetOSIPoints() {return &osi_points_;}
 		OSIPoints osi_points_;
 		void SetGlobalId();
 		int GetGlobalId() { return global_id_; }
