@@ -66,7 +66,7 @@ using namespace roadmanager;
 
 #define CURV_ZERO 0.00001
 #define MAX_TRACK_DIST 10
-#define OSI_POINT_CALC_STEPSIZE 0.1 // [m]
+#define OSI_POINT_CALC_STEPSIZE 1 // [m]
 #define OSI_TANGENT_LINE_TOLERANCE 0.01 // [m]
 
 
