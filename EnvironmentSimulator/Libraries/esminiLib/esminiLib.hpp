@@ -124,17 +124,6 @@ typedef struct
 	int orientation;  // 1=facing traffic in road direction, -1=facing traffic opposite road direction
 } SE_RoadSign;
 
-//TODO
-typedef struct
-{
-	//std::string name_;
-	//std::string value_;
-} SE_Property;
-//TODO
-typedef struct
-{
-	SE_Property property;
-} SE_VehicleProperties;
 
 #ifdef __cplusplus
 extern "C"
@@ -273,11 +262,10 @@ extern "C"
 	*/
 	SE_DLL_API const char *SE_GetParameterName(int index, int *type);
 
-	//TODO
 	/**
 		Get the number of vehicle properties by index
 		@param index The index of the vehicle
-		@return number of parameters
+		@return number of parameters if found, else 0;
 	*/
 	SE_DLL_API int SE_GetNumberOfProperties(int index);
 	//TODO

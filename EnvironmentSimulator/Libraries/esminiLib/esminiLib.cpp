@@ -499,22 +499,21 @@ extern "C"
 		return 0;
 	}
 
-	//TODO
 	SE_DLL_API int SE_GetNumberOfProperties(int index)
 	{
 		if (player)
 		{
-			int number = player->GetNumberOfProperties(index);
-			LOG("**************************************");
-			LOG("Got %d properties.",number);
-			LOG("**************************************");
-			return number;
+			return player->GetNumberOfProperties(index);
 		}
 		return 0;
 	}
 	//TODO
 	SE_DLL_API const char *SE_GetvehiclePropertyName(int index, int propertyIndex)
 	{
+		if(player->GetNumberOfProperties(index)>0)
+		{
+			return player->GetPropertyName(index,propertyIndex);
+		}
 		return "";
 	}
 	//TODO
