@@ -67,7 +67,6 @@ void ControllerFollowGhost::Step(double timeStep)
 	}
 
 
-
 	// Set steering target point at a distance ahead proportional to the speed
 	double probe_target_distance = MAX(7, 0.5 * object_->speed_);
 
