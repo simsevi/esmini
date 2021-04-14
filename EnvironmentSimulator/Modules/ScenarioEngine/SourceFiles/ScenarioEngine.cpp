@@ -612,7 +612,6 @@ void ScenarioEngine::parseScenario()
 						SetHeadstartTime(obj->ghost_->GetHeadstartTime());
 						SetSimulationTime(-obj->ghost_->GetHeadstartTime());
 						SetFakeTime(0);
-
 					}
 				}
 			}
