@@ -35,7 +35,6 @@ ScenarioEngine::ScenarioEngine(const pugi::xml_document &xml_doc, bool disable_c
 void ScenarioEngine::InitScenario(std::string oscFilename, bool disable_controllers)
 {
 	// Load and parse data
-
 	LOG("Hejsan %s", oscFilename.c_str());
 	quit_flag = false;
 	disable_controllers_ = disable_controllers;
