@@ -974,7 +974,12 @@ int ScenarioPlayer::GetNumberOfProperties(int index)
 
 const char* ScenarioPlayer::GetPropertyName(int index,int propertyIndex)
 {
-	return scenarioEngine->entities.object_[index]->properties_.property_[propertyIndex].name_.c_str();;
+	return scenarioEngine->entities.object_[index]->properties_.property_[propertyIndex].name_.c_str();
+}
+
+const char* ScenarioPlayer::GetPropertyValue(int index,int propertyIndex)
+{
+	return scenarioEngine->entities.object_[index]->properties_.property_[propertyIndex].value_.c_str();
 }
 
 #ifdef _SCENARIO_VIEWER

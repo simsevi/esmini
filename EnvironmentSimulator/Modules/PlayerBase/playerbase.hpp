@@ -90,7 +90,7 @@ public:
 	//int GetNumberOfVehicleProperties(){return 4;};
 	int GetNumberOfProperties(int index);
 	const char* GetPropertyName(int index, int propertyIndex);
-
+	const char* GetPropertyValue(int index,int propertyIndex);
 	roadmanager::OpenDrive *GetODRManager() { return odr_manager; }
 
 	CSV_Logger *CSV_Log;

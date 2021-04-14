@@ -510,15 +510,29 @@ extern "C"
 	//TODO
 	SE_DLL_API const char *SE_GetvehiclePropertyName(int index, int propertyIndex)
 	{
-		if(player->GetNumberOfProperties(index)>0)
+		if (player)
 		{
-			return player->GetPropertyName(index,propertyIndex);
+			int number = player->GetNumberOfProperties(index);
+			if (number > 0 && propertyIndex <= number)
+			{
+				return player->GetPropertyName(index, propertyIndex);
+			}
 		}
 		return "";
 	}
 	//TODO
 	SE_DLL_API const char *SE_GetVehiclePropertyValue(int index, const char *vehiclePropertyName)
 	{
+		if (player)
+		{
+			for(int i=0;i<player->GetNumberOfProperties(index);i++)
+			{
+				if(strcmp(player->GetPropertyName(index,i),vehiclePropertyName)==0)
+				{
+					return player->GetPropertyValue(index, i);
+				}
+			}
+		}
 		return "";
 	}
 

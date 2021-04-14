@@ -892,22 +892,29 @@ TEST(PropertyTest, TestGetAndSet)
 
 	//vehicel 0, 3 properties
 	EXPECT_EQ(SE_GetNumberOfProperties(0), 3);
-	// <Property name="model_id" value="1"/>
-	// <Property name="dummy1" value="2"/>
-	// <Property name="dummy2" value="3"/>
+	//    <Property name="model_id" value="1"/>
+	//    <Property name="dummy0_1" value="2"/>
+	//    <Property name="dummy0_2" value="3"/>
 	EXPECT_STREQ(SE_GetvehiclePropertyName(0, 0), "model_id");
-	EXPECT_STREQ(SE_GetvehiclePropertyName(0, 1), "dummy1");
-	EXPECT_STREQ(SE_GetvehiclePropertyName(0, 2), "dummy2");
+	EXPECT_STREQ(SE_GetvehiclePropertyName(0, 1), "dummy0_1");
+	EXPECT_STREQ(SE_GetvehiclePropertyName(0, 2), "dummy0_2");
+	EXPECT_STREQ(SE_GetVehiclePropertyValue(0, "model_id"), "1");
+	EXPECT_STREQ(SE_GetVehiclePropertyValue(0, "dummy0_1"), "2");
+	EXPECT_STREQ(SE_GetVehiclePropertyValue(0, "dummy0_2"), "3");
 	//vehicel 1, 4 properties
-	// <Property name="model_id" value="1"/>
-	// <Property name="dummy1" value="2"/>
-	// <Property name="dummy2" value="3"/>
-	// <Property name="dummy3" value="4"/>
+	//    <Property name="model_id" value="1"/>
+	//    <Property name="dummy1_1" value="2"/>
+	//    <Property name="dummy1_2" value="3"/>
+	//    <Property name="dummy1_3" value="4"/>
 	EXPECT_EQ(SE_GetNumberOfProperties(1), 4);
 	EXPECT_STREQ(SE_GetvehiclePropertyName(1, 0), "model_id");
-	EXPECT_STREQ(SE_GetvehiclePropertyName(1, 1), "dummy1");
-	EXPECT_STREQ(SE_GetvehiclePropertyName(1, 2), "dummy2");
-	EXPECT_STREQ(SE_GetvehiclePropertyName(1, 3), "dummy3");
+	EXPECT_STREQ(SE_GetvehiclePropertyName(1, 1), "dummy1_1");
+	EXPECT_STREQ(SE_GetvehiclePropertyName(1, 2), "dummy1_2");
+	EXPECT_STREQ(SE_GetvehiclePropertyName(1, 3), "dummy1_3");
+	//vehicel 2, 0 properties
+	EXPECT_EQ(SE_GetNumberOfProperties(2), 0);
+	EXPECT_STREQ(SE_GetvehiclePropertyName(2, 0), "");
+	EXPECT_STREQ(SE_GetVehiclePropertyValue(2, 0), "");
 }
 
 int main(int argc, char **argv)

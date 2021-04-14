@@ -273,7 +273,7 @@ extern "C"
 		Get the number of vehicle properties by index
 		@param index The index of the vehicle
 		@param propertyIndex The index of the property
-		@return the name of the property by index
+		@return the name of the property by index if found, else ""
 	*/
 	SE_DLL_API const char *SE_GetvehiclePropertyName(int index, int propertyIndex);
 	//TODO
@@ -281,7 +281,7 @@ extern "C"
 		Get the value of a vehicle property by name
 		@param index The index of the vehicle
 		@param vehiclePropertyName the vehicle property name
-		@return the value of a vehicle property by name
+		@return the value of a vehicle property by name if found, else ""
 	*/
 	SE_DLL_API const char *SE_GetVehiclePropertyValue(int index, const char *vehiclePropertyName);
 
