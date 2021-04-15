@@ -890,31 +890,42 @@ TEST(PropertyTest, TestGetAndSet)
 	const char *Scenario_file = scenario_file.c_str();
 	SE_Init(Scenario_file, 0, 0, 0, 0);
 
-	//vehicel 0, 3 properties
+	//object 0, 3 properties
 	EXPECT_EQ(SE_GetNumberOfProperties(0), 3);
 	//    <Property name="model_id" value="1"/>
 	//    <Property name="dummy0_1" value="2"/>
 	//    <Property name="dummy0_2" value="3"/>
-	EXPECT_STREQ(SE_GetvehiclePropertyName(0, 0), "model_id");
-	EXPECT_STREQ(SE_GetvehiclePropertyName(0, 1), "dummy0_1");
-	EXPECT_STREQ(SE_GetvehiclePropertyName(0, 2), "dummy0_2");
-	EXPECT_STREQ(SE_GetVehiclePropertyValue(0, "model_id"), "1");
-	EXPECT_STREQ(SE_GetVehiclePropertyValue(0, "dummy0_1"), "2");
-	EXPECT_STREQ(SE_GetVehiclePropertyValue(0, "dummy0_2"), "3");
-	//vehicel 1, 4 properties
+	EXPECT_STREQ(SE_GetObjectPropertyName(0, 0), "model_id");
+	EXPECT_STREQ(SE_GetObjectPropertyName(0, 1), "dummy0_1");
+	EXPECT_STREQ(SE_GetObjectPropertyName(0, 2), "dummy0_2");
+	EXPECT_STREQ(SE_GetObjectPropertyValue(0, "model_id"), "1");
+	EXPECT_STREQ(SE_GetObjectPropertyValue(0, "dummy0_1"), "2");
+	EXPECT_STREQ(SE_GetObjectPropertyValue(0, "dummy0_2"), "3");
+	//object 1, 4 properties
 	//    <Property name="model_id" value="1"/>
 	//    <Property name="dummy1_1" value="2"/>
 	//    <Property name="dummy1_2" value="3"/>
 	//    <Property name="dummy1_3" value="4"/>
 	EXPECT_EQ(SE_GetNumberOfProperties(1), 4);
-	EXPECT_STREQ(SE_GetvehiclePropertyName(1, 0), "model_id");
-	EXPECT_STREQ(SE_GetvehiclePropertyName(1, 1), "dummy1_1");
-	EXPECT_STREQ(SE_GetvehiclePropertyName(1, 2), "dummy1_2");
-	EXPECT_STREQ(SE_GetvehiclePropertyName(1, 3), "dummy1_3");
-	//vehicel 2, 0 properties
+	EXPECT_STREQ(SE_GetObjectPropertyName(1, 0), "model_id");
+	EXPECT_STREQ(SE_GetObjectPropertyName(1, 1), "dummy1_1");
+	EXPECT_STREQ(SE_GetObjectPropertyName(1, 2), "dummy1_2");
+	EXPECT_STREQ(SE_GetObjectPropertyName(1, 3), "dummy1_3");
+	// propertyIndex exceeds both limits
+	EXPECT_STREQ(SE_GetObjectPropertyName(1, -1), "");
+	EXPECT_STREQ(SE_GetObjectPropertyName(1, 4), "");
+	// propertyName does not exist
+	EXPECT_STREQ(SE_GetObjectPropertyValue(1, "superdummy"), "");
+
+
+	//object 2, 0 properties
 	EXPECT_EQ(SE_GetNumberOfProperties(2), 0);
-	EXPECT_STREQ(SE_GetvehiclePropertyName(2, 0), "");
-	EXPECT_STREQ(SE_GetVehiclePropertyValue(2, 0), "");
+	EXPECT_STREQ(SE_GetObjectPropertyName(2, 0), "");
+	EXPECT_STREQ(SE_GetObjectPropertyValue(2,"model_id"), "");
+
+	//object -1 and 3, does not exist
+	EXPECT_EQ(SE_GetNumberOfProperties(3), -1);
+	EXPECT_EQ(SE_GetNumberOfProperties(-1), -1);
 }
 
 int main(int argc, char **argv)

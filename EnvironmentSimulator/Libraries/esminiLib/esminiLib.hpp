@@ -275,7 +275,7 @@ extern "C"
 		@param propertyIndex The index of the property
 		@return the name of the property by index if found, else ""
 	*/
-	SE_DLL_API const char *SE_GetvehiclePropertyName(int index, int propertyIndex);
+	SE_DLL_API const char *SE_GetObjectPropertyName(int index, int propertyIndex);
 	//TODO
 	/**
 		Get the value of a vehicle property by name
@@ -283,7 +283,7 @@ extern "C"
 		@param vehiclePropertyName the vehicle property name
 		@return the value of a vehicle property by name if found, else ""
 	*/
-	SE_DLL_API const char *SE_GetVehiclePropertyValue(int index, const char *vehiclePropertyName);
+	SE_DLL_API const char *SE_GetObjectPropertyValue(int index, const char *objectPropertyName);
 
 	/**
 		Set value of named parameter
