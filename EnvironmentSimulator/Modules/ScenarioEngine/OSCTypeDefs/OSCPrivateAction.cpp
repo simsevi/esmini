@@ -801,7 +801,7 @@ void TeleportAction::Start(double simTime, double dt)
 		//printf("Trail: %d \n", object_->trail_.GetNumberOfVertices());
 		object_->trail_.Reset();
 		//printf("Trail: %d \n", object_->trail_.GetNumberOfVertices());
-		scenarioEngine_->ResetEvents();
+		scenarioEngine_->ResetEvents(); // Ghost-project. Reset events finished by ghost.
 	}
 
 	if (object_->GetControllerMode() == Controller::Mode::MODE_OVERRIDE &&

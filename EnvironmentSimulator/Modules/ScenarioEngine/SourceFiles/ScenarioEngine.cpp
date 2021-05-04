@@ -985,3 +985,54 @@ void ScenarioEngine::SetupGhost(Object* object)
 		}
 	}
 }
+// Reset events finished by ghost
+void ScenarioEngine::ResetEvents()
+{
+	printf("Trying to reset event");
+	for (size_t i = 0; i < storyBoard.story_.size(); i++)
+	{
+		Story* story = storyBoard.story_[i];
+
+		for (size_t j = 0; j < story->act_.size(); j++)
+		{
+			Act* act = story->act_[j];
+
+			for (size_t k = 0; k < act->maneuverGroup_.size(); k++)
+			{
+				for (size_t l = 0; l < act->maneuverGroup_[k]->maneuver_.size(); l++)
+				{
+					OSCManeuver* maneuver = act->maneuverGroup_[k]->maneuver_[l];
+
+					for (size_t m = 0; m < maneuver->event_.size(); m++)
+					{
+						Event* event = maneuver->event_[m];
+
+						if (event->state_ == StoryBoardElement::State::COMPLETE)
+						{
+							bool NoTele = true;
+							for (size_t n = 0; n < event->action_.size(); n++)
+							{
+								OSCAction* action = event->action_[n];
+								OSCPrivateAction* pa = (OSCPrivateAction*)action;
+								if (pa->type_ == OSCPrivateAction::ActionType::TELEPORT)
+								{
+									NoTele = false;
+								}
+							}
+							for (size_t n = 0; n < event->action_.size(); n++)
+							{
+								OSCAction* action = event->action_[n];
+								OSCPrivateAction* pa = (OSCPrivateAction*)action;
+
+								if (NoTele && pa->object_->IsGhost())
+								{
+									event->Standby();
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
