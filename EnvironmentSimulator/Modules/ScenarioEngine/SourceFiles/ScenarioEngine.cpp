@@ -337,6 +337,7 @@ void ScenarioEngine::step(double deltaSimTime)
 													maneuver->event_[n]->End();
 													LOG("Event %s ended, overwritten by event %s",
 														maneuver->event_[n]->name_.c_str(), event->name_.c_str());
+
 												}
 											}
 
