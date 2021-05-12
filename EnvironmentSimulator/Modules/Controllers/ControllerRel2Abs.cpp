@@ -61,7 +61,7 @@ void ControllerRel2Abs::findEgo()
 			{
 				std::string name = entities_->object_[i]->name_;
 				std::transform(name.begin(), name.end(), name.begin(),
-					[](unsigned char c) { return tolower(c); });
+					[](unsigned char c) { return (unsigned char)tolower(c); });
 				if (name == "ego") {
 					ego_obj = i;
 					LOG("Object named \"%s\" used as ego vehicle.", entities_->object_[i]->name_.c_str());
