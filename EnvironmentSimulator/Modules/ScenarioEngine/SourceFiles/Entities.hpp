@@ -19,6 +19,7 @@
 #include "CommonMini.hpp"
 #include "OSCBoundingBox.hpp"
 #include "OSCProperties.hpp"//todo
+#include <algorithm>
 
 namespace scenarioengine
 {

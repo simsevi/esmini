@@ -16,11 +16,9 @@
 #include "Controller.hpp"
 #include "pugixml.hpp"
 #include "Parameters.hpp"
-#include "vehicle.hpp"
-//#include "OSCPrivateAction.hpp"
 #include "Entities.hpp"
 
-#define CONTROLLER_MY_TYPE_NAME "ControllerRel2Abs"
+#define CONTROLLER_REL2ABS_TYPE_NAME "ControllerRel2Abs"
 
 namespace scenarioengine
 {
@@ -76,9 +74,9 @@ namespace scenarioengine
 		void SetScenarioEngine(ScenarioEngine* scenarioEngine) { scenarioEngine_ = scenarioEngine; };
 		void CopyPosition(Object* object, position_copy* obj_copy);
 
-		static const char* GetTypeNameStatic() { return CONTROLLER_MY_TYPE_NAME; }
+		static const char* GetTypeNameStatic() { return CONTROLLER_REL2ABS_TYPE_NAME; }
 		virtual const char* GetTypeName() { return GetTypeNameStatic(); }
-		static const int GetTypeStatic() { return Controller::Type::CONTROLLER_TYPE_MY; }
+		static const int GetTypeStatic() { return Controller::Type::CONTROLLER_TYPE_REL2ABS; }
 		virtual int GetType() { return GetTypeStatic(); }
 
 	private:

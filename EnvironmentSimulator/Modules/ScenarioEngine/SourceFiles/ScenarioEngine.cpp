@@ -577,7 +577,7 @@ void ScenarioEngine::parseScenario()
 		for (size_t i = 0; i < scenarioReader->controller_.size(); i++)
 		{
 			scenarioReader->controller_[i]->Init();
-			if (scenarioReader->controller_[i]->GetType() == Controller::Type::CONTROLLER_TYPE_MY)
+			if (scenarioReader->controller_[i]->GetType() == Controller::Type::CONTROLLER_TYPE_REL2ABS)
 			{
 				((ControllerRel2Abs*)(scenarioReader->controller_[i]))->SetScenarioEngine(this);
 			}
