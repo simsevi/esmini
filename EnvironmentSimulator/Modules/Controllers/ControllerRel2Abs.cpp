@@ -22,6 +22,7 @@
 #include "OSCManeuver.hpp"
 #include "ScenarioEngine.hpp"
 #include "RoadManager.hpp"
+#include <ctype.h>
 
 //#define CONTROLLER_REL2ABS_DEBUG
 

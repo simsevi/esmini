@@ -266,7 +266,7 @@ namespace scenarioengine
 		//Rel2abs Controller addition
 		void addEvent(Event* event) { objectEvents_.push_back(event); }
 		void removeEvent(Event* event);
-		bool containsEvent(Event* event) { return std::find(objectEvents_.begin(), objectEvents_.end(), event) != objectEvents_.end(); }
+		bool containsEvent(Event* event) { return (std::find(objectEvents_.begin(), objectEvents_.end(), event) != objectEvents_.end()); }
 		//Will not get completed actions - only running/standby
 		std::vector<OSCPrivateAction*> getPrivateActions();
 		std::vector<Event*> getEvents() { return objectEvents_; }
