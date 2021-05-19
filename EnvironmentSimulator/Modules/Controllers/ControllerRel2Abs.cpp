@@ -194,15 +194,24 @@ void ControllerRel2Abs::Step(double timeStep)
 
 				// Default controller - i.e. point mass model w. constant speed.
 				double v = object->GetSpeed();
+				double steplen = v * pred_timestep;
+				// Add or subtract stepsize according to curvature and offset, in order to keep constant speed
+				double curvature = object->pos_.GetCurvature();
+				double offset = object->pos_.GetT();
+				if (abs(curvature) > SMALL_NUMBER)
+				{
+					// Approximate delta length by sampling curvature in current position
+					steplen += steplen * curvature * offset;
+				}
+
 				if (!object->CheckDirtyBits(Object::DirtyBit::LONGITUDINAL))
 				{
 					if (object->pos_.GetRoute())
 					{
-						object->pos_.MoveRouteDS(v * pred_timestep);
+						object->pos_.MoveRouteDS(steplen);
 					}
 					else
 					{
-						double steplen = v * pred_timestep;
 						// Adjustment movement to heading and road direction
 						if (GetAbsAngleDifference(object->pos_.GetH(), object->pos_.GetDrivingDirection()) > M_PI_2)
 						{
