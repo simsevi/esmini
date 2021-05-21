@@ -800,6 +800,12 @@ void TeleportAction::Start(double simTime, double dt)
 		scenarioEngine_->SetSimulationTime(scenarioEngine_->getSimulationTime() - scenarioEngine_->GetHeadstartTime());
 		//printf("Trail: %d \n", object_->trail_.GetNumberOfVertices());
 		object_->trail_.Reset();
+
+		if (object_->ghost_Ego_ != 0)
+		{
+			object_->SetSpeed(object_->ghost_Ego_->GetSpeed());
+		}
+
 		//printf("Trail: %d \n", object_->trail_.GetNumberOfVertices());
 		scenarioEngine_->ResetEvents(); // Ghost-project. Reset events finished by ghost.
 	}

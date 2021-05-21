@@ -40,7 +40,7 @@ void ScenarioEngine::InitScenario(std::string oscFilename, bool disable_controll
 	disable_controllers_ = disable_controllers;
 	headstart_time_ = 0;
 	simulationTime_ = 0;
-	fakeTime_ = 0;
+	trueTime_ = 0;
 	initialized_ = false;
 	scenarioReader = new ScenarioReader(&entities, &catalogs, disable_controllers);
 	
@@ -90,7 +90,7 @@ void ScenarioEngine::InitScenario(const pugi::xml_document &xml_doc, bool disabl
 	disable_controllers_ = disable_controllers;
 	headstart_time_ = 0;
 	simulationTime_ = 0;
-	fakeTime_ = 0;
+	trueTime_ = 0;
 	initialized_ = false;
 	scenarioReader = new ScenarioReader(&entities, &catalogs, disable_controllers);
 	if (scenarioReader->loadOSCMem(xml_doc) != 0)
@@ -112,9 +112,10 @@ void ScenarioEngine::step(double deltaSimTime)
 {
 
 	simulationTime_ += deltaSimTime;
-	if (simulationTime_ >= fakeTime_)
+	if (simulationTime_ >= trueTime_)
 	{
-		fakeTime_ = simulationTime_;
+		trueTime_ = simulationTime_;
+		//printf("Truetime: %.2f \n", trueTime_);
 	}
 
 	if (entities.object_.size() == 0)
@@ -387,9 +388,19 @@ void ScenarioEngine::step(double deltaSimTime)
 								{
 									if (event->action_[n]->IsActive())
 									{
-										event->action_[n]->Step(simulationTime_, deltaSimTime);
+										// Try one
+										OSCAction* action = event->action_[n];
+										OSCPrivateAction* pa = (OSCPrivateAction*)action;
+										if (trueTime_ <= simulationTime_ || pa->object_->IsGhost())
+										{
+											event->action_[n]->Step(deltaSimTime, getSimulationTime());
 
-										active = active || (event->action_[n]->IsActive());
+											active = active || (event->action_[n]->IsActive());
+										}
+										else
+										{
+											active = true;
+										}
 									}
 								}
 								if (!active)
@@ -428,7 +439,7 @@ void ScenarioEngine::step(double deltaSimTime)
 		// and only ghosts allowed to execute before time == 0
 		if (!(obj->IsControllerActiveOnDomains(Controller::Domain::CTRL_BOTH) && obj->GetControllerMode() == Controller::Mode::MODE_OVERRIDE) &&
 			fabs(obj->speed_) > SMALL_NUMBER &&
-			(fakeTime_ <= simulationTime_ || obj->IsGhost()))
+			(trueTime_ <= simulationTime_ || obj->IsGhost()))
 		{
 			defaultController(obj, deltaSimTime);
 		}
@@ -458,7 +469,7 @@ void ScenarioEngine::step(double deltaSimTime)
 		{
 			if (scenarioReader->controller_[i]->Active())
 			{
-				if (fakeTime_ <= simulationTime_)
+				if (trueTime_ <= simulationTime_)
 				{
 					scenarioReader->controller_[i]->Step(deltaSimTime);
 				}
@@ -519,7 +530,7 @@ ScenarioGateway *ScenarioEngine::getScenarioGateway()
 void ScenarioEngine::parseScenario()
 {
 	SetSimulationTime(0);
-	SetFakeTime(0);
+	SetTrueTime(0);
 
 	if (!disable_controllers_)
 	{
@@ -627,7 +638,7 @@ void ScenarioEngine::parseScenario()
 					{
 						SetHeadstartTime(obj->ghost_->GetHeadstartTime());
 						SetSimulationTime(-obj->ghost_->GetHeadstartTime());
-						SetFakeTime(0);
+						SetTrueTime(0);
 					}
 				}
 			}
@@ -879,6 +890,13 @@ void ScenarioEngine::ReplaceObjectInTrigger(Trigger* trigger, Object* obj1, Obje
 					//event->action_.push_back(myNewAction);
 					event->action_.insert(event->action_.begin(), myNewAction);
 
+					/*LongSpeedAction* myNewSpeedAction = new LongSpeedAction;
+					
+					myNewSpeedAction->type_ = OSCPrivateAction::ActionType::LONG_SPEED;
+
+					event->action_.insert(event->action_.begin(), myNewSpeedAction);*/
+
+
 					//maneuver->event_.push_back(teleportEvent);
 					LOG("Created new action-------------------------------------------");
 				}
@@ -904,6 +922,7 @@ void ScenarioEngine::SetupGhost(Object* object)
 	object->SetGhost(ghost);
 	ghost->name_ += "_ghost";
 	ghost->ghost_ = 0;
+	ghost->ghost_Ego_ = object;
 	ghost->controller_ = 0;
 	ghost->isGhost_ = true;
 	ghost->SetHeadstartTime(object->headstart_time_);
@@ -989,7 +1008,7 @@ void ScenarioEngine::SetupGhost(Object* object)
 // Reset events finished by ghost
 void ScenarioEngine::ResetEvents()
 {
-	printf("Trying to reset event");
+	printf("Trying to reset event \n");
 	for (size_t i = 0; i < storyBoard.story_.size(); i++)
 	{
 		Story* story = storyBoard.story_[i];
@@ -1027,7 +1046,13 @@ void ScenarioEngine::ResetEvents()
 
 								if (NoTele && pa->object_->IsGhost())
 								{
-									event->Standby();
+									printf("Reset event %s: \n", event->name_.c_str());
+									event->Reset();
+								}
+								if (event->start_trigger_->Evaluate(&storyBoard, simulationTime_) == true)
+								{
+									printf("End event %s: \n", event->name_.c_str());
+									event->End();
 								}
 							}
 						}

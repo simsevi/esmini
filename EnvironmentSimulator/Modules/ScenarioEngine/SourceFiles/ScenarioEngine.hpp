@@ -65,15 +65,15 @@ namespace scenarioengine
 		void SetSimulationTime(double time) { simulationTime_ = time; }
 		double *GetSimulationTimePtr() { return &simulationTime_; }
 
-		void SetFakeTime(double time) { fakeTime_ = time; }
-		double GetFakeTime() { return fakeTime_; }
-		double* GetFakeTimePtr() { return &fakeTime_;  }
+		void SetTrueTime(double time) { trueTime_ = time; }
+		double GetTrueTime() { return trueTime_; }
+		double* GetTrueTimePtr() { return &trueTime_;  }
 
 		//static void TimeSetBack();
 
 		double simulationTime_;
 		double headstart_time_;
-		double fakeTime_;
+		double trueTime_;
 		bool doOnce = true;
 
 	private:

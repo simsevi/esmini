@@ -1012,3 +1012,15 @@ std::vector<OSCPrivateAction*> Object::getPrivateActions() {
 	}
 	return actions;
 }
+
+bool Object::IsGhost()
+{
+	if (isGhost_)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
