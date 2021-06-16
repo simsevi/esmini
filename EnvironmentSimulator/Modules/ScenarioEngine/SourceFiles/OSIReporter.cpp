@@ -1135,6 +1135,18 @@ int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
 
 		roadmanager::Road* road = opendrive->GetRoadByIdx(i);
 
+		//Get predecessor and successor roads if exists
+		roadmanager::Road* predecessorRoad = nullptr;
+		roadmanager::Road* successorRoad = nullptr;
+		if(road->GetLink(LinkType::PREDECESSOR))
+		{
+			predecessorRoad = opendrive->GetRoadByIdx(road->GetLink(LinkType::PREDECESSOR)->GetElementId());
+		}
+		if(road->GetLink(LinkType::SUCCESSOR))
+		{
+			successorRoad = opendrive->GetRoadByIdx(road->GetLink(LinkType::SUCCESSOR)->GetElementId());
+		}
+
 		// loop over all lane sections
 		for (int j= 0; j<road->GetNumberOfLaneSections(); j++)
 		{
@@ -1208,6 +1220,27 @@ int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
 							class_type = osi3::Lane_Classification_Type::Lane_Classification_Type_TYPE_UNKNOWN;
 						}
 						osi_lane->mutable_classification()->set_type(class_type);
+
+						//Get the predecessor and successor lanes
+						roadmanager::Lane* predecessorLane = nullptr;
+						roadmanager::Lane* successorLane = nullptr;
+						
+						if(predecessorRoad && lane->GetLink(LinkType::PREDECESSOR))
+						{
+							predecessorLane = predecessorRoad->GetDrivingLaneById(k, lane->GetLink(LinkType::PREDECESSOR)->GetId());
+							if(predecessorLane)
+							{
+								osi_lane->mutable_classification()->add_lane_pairing()->mutable_antecessor_lane_id()->set_value(predecessorLane->GetGlobalId());
+							}
+						}
+						if(successorRoad && lane->GetLink(LinkType::SUCCESSOR))
+						{
+							successorLane = successorRoad->GetDrivingLaneById(k, lane->GetLink(LinkType::SUCCESSOR)->GetId());
+							if(successorLane)
+							{
+								osi_lane->mutable_classification()->add_lane_pairing()->mutable_successor_lane_id()->set_value(successorLane->GetGlobalId());
+							}
+						}
 
 						// CENTERLINE POINTS
 						int n_osi_points = lane->GetOSIPoints()->GetNumOfOSIPoints();
