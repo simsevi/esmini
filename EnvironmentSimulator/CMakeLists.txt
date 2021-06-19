@@ -17,7 +17,7 @@ set ( CONTROLLERS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Modules/Controllers")
 
 # OpenSceneGraph package adapted for this project
 set ( OSG_VERSION "osg161" )
-set ( OSG_BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../externals/OpenSceneGraph" )
+set ( OSG_BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../externals/OSG" )
 set ( OSI_BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../externals/OSI" )
 set ( SUMO_BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../externals/SUMO" )
 
@@ -29,7 +29,7 @@ set( CMAKE_VERBOSE_MAKEFILE true )
 
 if (APPLE)
   set ( TIME_LIB "" ) 
-  set ( OSG_PACKAGE_URL https://dl.dropboxusercontent.com/s/d0czj6b89p9jyvv/OpenSceneGraph_mac.7z?dl=0 )
+  set ( OSG_PACKAGE_URL https://dl.dropboxusercontent.com/s/d0czj6b89p9jyvv/osg_mac.7z?dl=0 )
   set ( OSG_DIR "${OSG_BASE_DIR}/mac" )
   set ( OSI_PACKAGE_URL https://dl.dropboxusercontent.com/s/m62v19gp0m73dte/osi_mac.7z?dl=0 )
   set ( OSI_DIR "${OSI_BASE_DIR}/mac" )
@@ -37,7 +37,7 @@ if (APPLE)
   set ( SUMO_DIR "${SUMO_BASE_DIR}/mac" )
 elseif (UNIX)
   set ( TIME_LIB "" )
-  set ( OSG_PACKAGE_URL https://dl.dropboxusercontent.com/s/3dlev34kj94lir5/OpenSceneGraph_linux.7z?dl=0 )
+  set ( OSG_PACKAGE_URL https://www.dropbox.com/s/xynoy1fimom8q26/osg_linux.7z?dl=0 )
   set ( OSG_DIR "${OSG_BASE_DIR}/linux" )
   set ( OSI_PACKAGE_URL https://dl.dropboxusercontent.com/s/kwtdg0c1c8pawa1/osi_linux.7z?dl=0 )
   set ( OSI_DIR "${OSI_BASE_DIR}/linux" )
@@ -46,37 +46,19 @@ elseif (UNIX)
   set ( GTEST_PACKAGE_URL https://dl.dropboxusercontent.com/s/si7jsjjsy5bpoym/googletest_linux.7z?dl=0 )
   set ( GTEST_DIR "${GTEST_BASE_DIR}/linux" )
 elseif (WIN32)
-  if (WINSDK7_1)
-    message ("Configuring for Windows SDK v7.1 x64")
-    set ( SOCK_LIB Ws2_32.lib )
-    set ( TIME_LIB winmm.lib )
-    set ( OSG_PACKAGE_URL https://drive.google.com/uc?export=download&id=1NBEvGZiTWmqxk-MEOq7uK1uh_vaUMaEL )
-    set ( OSG_DIR "${OSG_BASE_DIR}/winsdk71" )
-  elseif ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "Win32")
-    message ("Configuring for Windows SDK v10 win32")
-    set ( SOCK_LIB Ws2_32.lib )
-    set ( TIME_LIB "" )
-    set ( OSG_PACKAGE_URL https://drive.google.com/uc?export=download&id=10dV9P0qOeJUgTtsSDld4AlbClE--SivX )
-    set ( OSG_DIR "${OSG_BASE_DIR}/win32" )
-  elseif ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
-    message ("Configuring for Windows SDK v10 x64")
-    set ( SOCK_LIB Ws2_32.lib )
-    set ( TIME_LIB "" )
-    set ( OSG_PACKAGE_URL https://dl.dropboxusercontent.com/s/e95hnoo782p40uc/OpenSceneGraph_v10.7z?dl=0 )
-    set ( OSI_PACKAGE_URL https://dl.dropboxusercontent.com/s/an58ckp2qfx5069/osi_v10.7z?dl=0 )
-    set ( SUMO_PACKAGE_URL https://dl.dropboxusercontent.com/s/5jtpnnd61wonxuh/sumo_v10.7z?dl=0 )
-    set ( GTEST_PACKAGE_URL https://dl.dropboxusercontent.com/s/aaiehwzc6woqbc6/googletest_v10.7z?dl=0 )
-    set ( OSG_DIR "${OSG_BASE_DIR}/v10" )
-    set ( OSI_DIR "${OSI_BASE_DIR}/v10" )
-    set ( SUMO_DIR "${SUMO_BASE_DIR}/v10" )
-    set ( GTEST_DIR "${GTEST_BASE_DIR}/v10" )
-  else ()
-    message ("Unknown configuration")
-  endif ()
+  set ( SOCK_LIB Ws2_32.lib )
+  set ( TIME_LIB "" )
+  set ( OSG_PACKAGE_URL https://www.dropbox.com/s/w2raucgac3ru9gc/osg_v10.7z?dl=0 )
+  set ( OSI_PACKAGE_URL https://dl.dropboxusercontent.com/s/an58ckp2qfx5069/osi_v10.7z?dl=0 )
+  set ( SUMO_PACKAGE_URL https://dl.dropboxusercontent.com/s/5jtpnnd61wonxuh/sumo_v10.7z?dl=0 )
+  set ( GTEST_PACKAGE_URL https://dl.dropboxusercontent.com/s/aaiehwzc6woqbc6/googletest_v10.7z?dl=0 )
+  set ( OSG_DIR "${OSG_BASE_DIR}/v10" )
+  set ( OSI_DIR "${OSI_BASE_DIR}/v10" )
+  set ( SUMO_DIR "${SUMO_BASE_DIR}/v10" )
+  set ( GTEST_DIR "${GTEST_BASE_DIR}/v10" )
 endif (APPLE)
 
 set ( OSG_INCLUDE_DIR 
-	"${OSG_DIR}/build/include"
 	"${OSG_DIR}/include"
 )
 set ( OSG_LIBRARIES_PATH 
@@ -284,7 +266,7 @@ else() #not UNIX
       optimized osgdb_serializers_osgsim.lib debug osgdb_serializers_osgsimd.lib
       optimized osgdb_serializers_osg.lib debug osgdb_serializers_osgd.lib
       optimized osgdb_osg.lib debug osgdb_osgd.lib 	
-      optimized osgdb_fbx.lib debug osgdb_fbxd.lib 	
+      # optimized osgdb_fbx.lib debug osgdb_fbxd.lib
       optimized osgdb_jpeg.lib debug osgdb_jpegd.lib
   )
 

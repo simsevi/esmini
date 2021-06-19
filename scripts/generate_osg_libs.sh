@@ -45,10 +45,18 @@ if [ "$OSTYPE" == "msys" ]; then
     # https://www.7-zip.org/download.html
     APP_7ZIP="/c/Program Files/7-Zip/7z.exe"
     
+    LIB_EXT="lib"
+    LIB_PREFIX=""
+    LIB_OSG_PREFIX="osg161-"
+    LIB_OT_PREFIX="ot21-"
 elif [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "linux-gnu"* ]]; then
 	# Unix Makefiles (for Ubuntu and other Linux systems)
 	GENERATOR=("Unix Makefiles")
 	GENERATOR_ARGUMENTS=""
+    LIB_EXT="a"
+    LIB_PREFIX="lib"
+    LIB_OSG_PREFIX="lib"
+    LIB_OT_PREFIX="lib"
 else
 	echo Unknown OSTYPE: $OSTYPE
 fi
@@ -62,11 +70,11 @@ OSG_VERSION=OpenSceneGraph-3.6.5
 # However you might want to adjust versions of software packages being checkout and built
 
 
-osi_root_dir=$(pwd)
+osg_root_dir=$(pwd)
 
 
 echo ------------------------ Installing dependencies ------------------------------------
-cd $osi_root_dir
+cd $osg_root_dir
 
 
 if [ "$OSTYPE" == "msys" ]; then
@@ -111,7 +119,7 @@ elif  [[ "$OSTYPE" == "linux-gnu"* ]]; then
     fi
 fi
 
-cd $osi_root_dir
+cd $osg_root_dir
 if [[ "$OSTYPE" == "linux-gnu"* ]] || [[ "$OSTYPE" == "darwin"* ]]; then
     if [ ! -d jpeg-8d ]; then
         if [ ! -f jpegsrc.v8d.tar.gz ]; then
@@ -133,7 +141,7 @@ if [[ "$OSTYPE" == "linux-gnu"* ]] || [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 echo ------------------------ Installing OSG ------------------------------------
-cd $osi_root_dir
+cd $osg_root_dir
 
 if [ ! -d OpenSceneGraph ]; then
     git clone https://github.com/openscenegraph/OpenSceneGraph
@@ -176,8 +184,10 @@ if [ ! -d OpenSceneGraph/build ]; then
         echo Unknown OSTYPE: $OSTYPE
     fi
 fi
-exit
+
 echo ------------------------ Pack ------------------------------------
+
+cd $osg_root_dir
 
 if [ "$OSTYPE" == "msys" ]; then
     target_dir="v10"
@@ -192,21 +202,69 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     zfilename="osg_mac.7z"
     z_exe=7z
 else
-	echo Unknown OSTYPE: $OSTYPE
+    echo Unknown OSTYPE: $OSTYPE
 fi
 
-mkdir $target_dir
-mkdir $target_dir/build
-mkdir $target_dir/include
-mkdir $target_dir/lib
-cp open-simulation-interface/install/osi-lib/include/osi3/* $target_dir/include
-cp open-simulation-interface/install/osi-lib/lib/osi3/*open_simulation_interface_pic*.* $target_dir/lib
-cp -r protobuf/protobuf-install/include/google $target_dir/include
-cp protobuf/protobuf-install/lib/libprotobuf*.* $target_dir/lib
-rm $target_dir/lib/libprotobuf-lite*
+if [ ! -d $target_dir ] 
+then
+    mkdir $target_dir
+    mkdir $target_dir/include
+    mkdir $target_dir/lib
+    mkdir $target_dir/lib/osgPlugins-3.6.5
+    cp -r OpenSceneGraph/install/include $target_dir/
 
-"$z_exe" a -r $zfilename -m0=LZMA -bb1 -spf $target_dir/*
-# unpack with: 7z x <filename>
+    if [ "$OSTYPE" == "msys" ]; then
+        cp 3rdParty_x64/x64/include/zlib.h $target_dir/include
+        cp 3rdParty_x64/x64/lib/zlibstatic.lib 3rdParty_x64/x64/lib/zlibstaticd.lib $target_dir/lib
+        cp 3rdParty_x64/x64/include/jpeglib.h $target_dir/include
+        cp 3rdParty_x64/x64/lib/jpeg.lib 3rdParty_x64/x64/lib/jpegd.lib $target_dir/lib
+    elif [[ "$OSTYPE" == "linux-gnu"* ]] || [[ "$OSTYPE" == "darwin"* ]]; then
+        cp zlib-1.2.11/install/include/zlib.h $target_dir/include
+        cp zlib-1.2.11/install/lib/zlibstatic.${LIB_EXT} zlib-1.2.11/install/lib/zlibstatic.${LIB_EXT} $target_dir/lib
+    else
+        echo Unknown OSTYPE: $OSTYPE
+    fi
 
-echo ------------------------ Done ------------------------------------
-cd $osi_root_dir
+    cd $osg_root_dir/OpenSceneGraph/install/lib
+    cp ${LIB_OSG_PREFIX}osg.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgAnimation.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgDB.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgGA.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgShadow.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgSim.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgText.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgUtil.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgViewer.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OT_PREFIX}OpenThreads.${LIB_EXT} $osg_root_dir/$target_dir/lib
+
+    cd $osg_root_dir/OpenSceneGraph/install-debug/lib
+    cp ${LIB_OSG_PREFIX}osgd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgAnimationd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgDBd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgGAd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgShadowd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgSimd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgTextd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgUtild.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OSG_PREFIX}osgViewerd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+    cp ${LIB_OT_PREFIX}OpenThreadsd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+
+    cd $osg_root_dir/OpenSceneGraph/install/lib/osgPlugins-3.6.5
+    cp ${LIB_PREFIX}osgdb_jpeg.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
+    cp ${LIB_PREFIX}osgdb_osg.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
+    cp ${LIB_PREFIX}osgdb_serializers_osg.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
+    cp ${LIB_PREFIX}osgdb_serializers_osgsim.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
+
+    cd $osg_root_dir/OpenSceneGraph/install-debug/lib/osgPlugins-3.6.5
+    cp ${LIB_PREFIX}osgdb_jpegd.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
+    cp ${LIB_PREFIX}osgdb_osgd.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
+    cp ${LIB_PREFIX}osgdb_serializers_osgd.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
+    cp ${LIB_PREFIX}osgdb_serializers_osgsimd.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
+
+    cd $osg_root_dir
+
+    "$z_exe" a -r $zfilename -m0=LZMA -bb1 -spf $target_dir/*
+    # unpack with: 7z x <filename>
+
+    echo ------------------------ Done ------------------------------------
+fi
