@@ -84,7 +84,7 @@ if [ "$OSTYPE" == "msys" ]; then
         fi    
         "$APP_7ZIP" x 3rdParty_VS2017_v141_x64_V11_small.7z
     fi
-elif  [[ "$OSTYPE" == "linux-gnu"* ]]; then
+elif  [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "linux-gnu"* ]]; then
 
     if [ ! -d zlib-1.2.11 ]; then
         if [ ! -f zlib1211.zip ]; then
@@ -108,10 +108,6 @@ elif  [[ "$OSTYPE" == "linux-gnu"* ]]; then
         elif [[ "$OSTYPE" == "darwin"* ]]; then
             cmake -G "${GENERATOR[@]}" ${GENERATOR_ARGUMENTS} -D CMAKE_INSTALL_PREFIX=../install -DCMAKE_BUILD_TYPE=Release .. -DCMAKE_C_FLAGS="-fPIC" 
             cmake --build . --target install
-        else
-            cmake -G "${GENERATOR[@]}" ${GENERATOR_ARGUMENTS} -D CMAKE_INSTALL_PREFIX=../install ..
-            cmake --build . -j --config Debug --target install
-            cmake --build . -j --config Release --target install --clean-first
         fi
 
     else
@@ -128,7 +124,8 @@ if [[ "$OSTYPE" == "linux-gnu"* ]] || [[ "$OSTYPE" == "darwin"* ]]; then
         tar xzf jpegsrc.v8d.tar.gz
         cd jpeg-8d
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            ./configure, make
+            ./configure
+            make
         else
             ./configure CFLAGS='-fPIC -g'; make -j
             mv .libs .libsd
@@ -144,17 +141,25 @@ echo ------------------------ Installing OSG -----------------------------------
 cd $osg_root_dir
 
 if [ ! -d OpenSceneGraph ]; then
-    git clone https://github.com/openscenegraph/OpenSceneGraph
+    git clone https://github.com/eknabevcc/OpenSceneGraph
 fi
 
 if [ ! -d OpenSceneGraph/build ]; then
 
     cd OpenSceneGraph
-    mkdir build
-    cd build
     git checkout $OSG_VERSION
+
     # Apply fix for comment format not accepted by all platforms
     git checkout 63bb537132bab1f8b077838f7550e26405e5fa35 CMakeModules/FindFontconfig.cmake
+
+    # Apply fix for Mac window handler
+    git checkout 3994378a20948ebc4ed10b7cd33a6cc5393e7157 src/osgViewer/GraphicsWindowCocoa.mm
+
+    # Apply fix for shadow maps on Intel UHD Graphics 620/Windows systems
+    git checkout 0229db8632c03b3aaf35420d72dd8eb49fe3ad02 src/osgShadow/ShadowMap.cpp
+
+    mkdir build
+    cd build
 
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         cmake ../ -DDYNAMIC_OPENSCENEGRAPH=false -DDYNAMIC_OPENTHREADS=false -DCMAKE_CXX_FLAGS=-fPIC -DJPEG_LIBRARY_RELEASE=../../jpeg-8d/.libs/libjpeg.a -DJPEG_INCLUDE_DIR=../../jpeg-8d -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install
@@ -168,7 +173,9 @@ if [ ! -d OpenSceneGraph/build ]; then
         make -j8 install
     
     elif [[ "$OSTYPE" == "darwin"* ]]; then
-        cmake ../ -DDYNAMIC_OPENSCENEGRAPH=false -DDYNAMIC_OPENTHREADS=false -DJPEG_LIBRARY_RELEASE=../../jpeg-8d/.libs/libjpeg.a -DJPEG_INCLUDE_DIR../../jpeg-8d
+        cmake ../ -DDYNAMIC_OPENSCENEGRAPH=false -DDYNAMIC_OPENTHREADS=false -DJPEG_LIBRARY_RELEASE=../../jpeg-8d/.libs/libjpeg.a -DJPEG_INCLUDE_DIR=../../jpeg-8d -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-fPIC -DCMAKE_INSTALL_PREFIX=../install
+
+        cmake --build . -j 16 --config Release --target install
 
     elif [ "$OSTYPE" == "msys" ]; then
         cmake -G "${GENERATOR[@]}" ${GENERATOR_ARGUMENTS} ../ -DDYNAMIC_OPENSCENEGRAPH=false -DDYNAMIC_OPENTHREADS=false -DCMAKE_INSTALL_PREFIX=../install -DACTUAL_3RDPARTY_DIR=../../3rdParty_x64/x64
@@ -220,7 +227,7 @@ then
         cp 3rdParty_x64/x64/lib/jpeg.lib 3rdParty_x64/x64/lib/jpegd.lib $target_dir/lib
     elif [[ "$OSTYPE" == "linux-gnu"* ]] || [[ "$OSTYPE" == "darwin"* ]]; then
         cp zlib-1.2.11/install/include/zlib.h $target_dir/include
-        cp zlib-1.2.11/install/lib/zlibstatic.${LIB_EXT} zlib-1.2.11/install/lib/zlibstatic.${LIB_EXT} $target_dir/lib
+        cp zlib-1.2.11/install/lib/libz.${LIB_EXT} zlib-1.2.11/install/lib/libzd.${LIB_EXT} $target_dir/lib
     else
         echo Unknown OSTYPE: $OSTYPE
     fi
@@ -237,29 +244,31 @@ then
     cp ${LIB_OSG_PREFIX}osgViewer.${LIB_EXT} $osg_root_dir/$target_dir/lib
     cp ${LIB_OT_PREFIX}OpenThreads.${LIB_EXT} $osg_root_dir/$target_dir/lib
 
-    cd $osg_root_dir/OpenSceneGraph/install-debug/lib
-    cp ${LIB_OSG_PREFIX}osgd.${LIB_EXT} $osg_root_dir/$target_dir/lib
-    cp ${LIB_OSG_PREFIX}osgAnimationd.${LIB_EXT} $osg_root_dir/$target_dir/lib
-    cp ${LIB_OSG_PREFIX}osgDBd.${LIB_EXT} $osg_root_dir/$target_dir/lib
-    cp ${LIB_OSG_PREFIX}osgGAd.${LIB_EXT} $osg_root_dir/$target_dir/lib
-    cp ${LIB_OSG_PREFIX}osgShadowd.${LIB_EXT} $osg_root_dir/$target_dir/lib
-    cp ${LIB_OSG_PREFIX}osgSimd.${LIB_EXT} $osg_root_dir/$target_dir/lib
-    cp ${LIB_OSG_PREFIX}osgTextd.${LIB_EXT} $osg_root_dir/$target_dir/lib
-    cp ${LIB_OSG_PREFIX}osgUtild.${LIB_EXT} $osg_root_dir/$target_dir/lib
-    cp ${LIB_OSG_PREFIX}osgViewerd.${LIB_EXT} $osg_root_dir/$target_dir/lib
-    cp ${LIB_OT_PREFIX}OpenThreadsd.${LIB_EXT} $osg_root_dir/$target_dir/lib
-
     cd $osg_root_dir/OpenSceneGraph/install/lib/osgPlugins-3.6.5
     cp ${LIB_PREFIX}osgdb_jpeg.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
     cp ${LIB_PREFIX}osgdb_osg.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
     cp ${LIB_PREFIX}osgdb_serializers_osg.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
     cp ${LIB_PREFIX}osgdb_serializers_osgsim.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
 
-    cd $osg_root_dir/OpenSceneGraph/install-debug/lib/osgPlugins-3.6.5
-    cp ${LIB_PREFIX}osgdb_jpegd.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
-    cp ${LIB_PREFIX}osgdb_osgd.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
-    cp ${LIB_PREFIX}osgdb_serializers_osgd.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
-    cp ${LIB_PREFIX}osgdb_serializers_osgsimd.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
+    if [[ ! "$OSTYPE" == "darwin"* ]]; then
+        cd $osg_root_dir/OpenSceneGraph/install-debug/lib
+        cp ${LIB_OSG_PREFIX}osgd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+        cp ${LIB_OSG_PREFIX}osgAnimationd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+        cp ${LIB_OSG_PREFIX}osgDBd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+        cp ${LIB_OSG_PREFIX}osgGAd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+        cp ${LIB_OSG_PREFIX}osgShadowd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+        cp ${LIB_OSG_PREFIX}osgSimd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+        cp ${LIB_OSG_PREFIX}osgTextd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+        cp ${LIB_OSG_PREFIX}osgUtild.${LIB_EXT} $osg_root_dir/$target_dir/lib
+        cp ${LIB_OSG_PREFIX}osgViewerd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+        cp ${LIB_OT_PREFIX}OpenThreadsd.${LIB_EXT} $osg_root_dir/$target_dir/lib
+
+        cd $osg_root_dir/OpenSceneGraph/install-debug/lib/osgPlugins-3.6.5
+        cp ${LIB_PREFIX}osgdb_jpegd.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
+        cp ${LIB_PREFIX}osgdb_osgd.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
+        cp ${LIB_PREFIX}osgdb_serializers_osgd.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
+        cp ${LIB_PREFIX}osgdb_serializers_osgsimd.${LIB_EXT} $osg_root_dir/$target_dir/lib/osgPlugins-3.6.5
+    fi
 
     cd $osg_root_dir
 

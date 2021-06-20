@@ -29,7 +29,7 @@ set( CMAKE_VERBOSE_MAKEFILE true )
 
 if (APPLE)
   set ( TIME_LIB "" ) 
-  set ( OSG_PACKAGE_URL https://dl.dropboxusercontent.com/s/d0czj6b89p9jyvv/osg_mac.7z?dl=0 )
+  set ( OSG_PACKAGE_URL https://www.dropbox.com/s/d7exvn6loev4ltl/osg_mac.7z?dl=0 )
   set ( OSG_DIR "${OSG_BASE_DIR}/mac" )
   set ( OSI_PACKAGE_URL https://dl.dropboxusercontent.com/s/m62v19gp0m73dte/osi_mac.7z?dl=0 )
   set ( OSI_DIR "${OSI_BASE_DIR}/mac" )
