@@ -24,28 +24,30 @@
 #include <winsock2.h>
 #include <Ws2tcpip.h>
 #else
- /* Assume that any non-Windows platform uses POSIX-style sockets instead. */
+/* Assume that any non-Windows platform uses POSIX-style sockets instead. */
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <netdb.h>  /* Needed for getaddrinfo() and freeaddrinfo() */
+#include <netdb.h>	/* Needed for getaddrinfo() and freeaddrinfo() */
 #include <unistd.h> /* Needed for close() */
 #endif
 
 #define OSI_OUT_PORT 48198
 #define OSI_MAX_UDP_DATA_SIZE 8200
 
-static struct {
+static struct
+{
 	osi3::SensorData *sd;
 	osi3::GroundTruth *gt;
 	osi3::StationaryObject *sobj;
 	osi3::MovingObject *mobj;
-	std::vector<osi3::Lane*> ln;
-	std::vector<osi3::LaneBoundary*> lnb;
+	std::vector<osi3::Lane *> ln;
+	std::vector<osi3::LaneBoundary *> lnb;
 } obj_osi_internal;
 
 // Large OSI messages needs to be split for UDP transmission
 // This struct must be mached on receiver side
-static struct {
+static struct
+{
 	int counter;
 	unsigned int datasize;
 	char data[OSI_MAX_UDP_DATA_SIZE];
@@ -92,8 +94,8 @@ OSIReporter::OSIReporter()
 	obj_osi_internal.gt->mutable_timestamp()->set_seconds(0);
 	obj_osi_internal.gt->mutable_timestamp()->set_nanos(0);
 
-    // Sensor Data
-    obj_osi_internal.sd = new osi3::SensorData();
+	// Sensor Data
+	obj_osi_internal.sd = new osi3::SensorData();
 
 	// Counter for OSI update
 	osi_update_counter_ = 0;
@@ -119,14 +121,13 @@ OSIReporter::~OSIReporter()
 	obj_osi_internal.lnb.clear();
 
 	osiGroundTruth.size = 0;
-	osiRoadLane.size=0;
+	osiRoadLane.size = 0;
 
 	CloseSocket();
 	if (osi_file.is_open())
 	{
 		osi_file.close();
 	}
-
 }
 
 int OSIReporter::OpenSocket(std::string ipaddr)
@@ -143,7 +144,8 @@ int OSIReporter::OpenSocket(std::string ipaddr)
 
 	// create socket for outgoing UDP packages
 	sendSocket = (int)socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (sendSocket < 0) {
+	if (sendSocket < 0)
+	{
 		LOG("socket failed");
 		return -1;
 	}
@@ -180,7 +182,7 @@ int OSIReporter::CloseSocket()
 	return 0;
 }
 
-void OSIReporter::ReportSensors(std::vector<ObjectSensor*> sensor)
+void OSIReporter::ReportSensors(std::vector<ObjectSensor *> sensor)
 {
 	const int max_detections = 10;
 
@@ -188,23 +190,24 @@ void OSIReporter::ReportSensors(std::vector<ObjectSensor*> sensor)
 	{
 		return;
 	}
-	while (obj_osi_internal.sd->sensor_view_size() < sensor.size()){
+	while (obj_osi_internal.sd->sensor_view_size() < sensor.size())
+	{
 		obj_osi_internal.sd->add_sensor_view();
 	}
 	for (int i = 0; i < sensor.size(); i++)
 	{
-        // Clear history
-        obj_osi_internal.sd->mutable_sensor_view(i)->mutable_global_ground_truth()->clear_moving_object();
+		// Clear history
+		obj_osi_internal.sd->mutable_sensor_view(i)->mutable_global_ground_truth()->clear_moving_object();
 		for (int j = 0; j < sensor[i]->nObj_; j++)
 		{
-            // Create moving object
-            osi3::MovingObject* mobj;
-            mobj = obj_osi_internal.sd->mutable_sensor_view(i)->mutable_global_ground_truth()->add_moving_object();
+			// Create moving object
+			osi3::MovingObject *mobj;
+			mobj = obj_osi_internal.sd->mutable_sensor_view(i)->mutable_global_ground_truth()->add_moving_object();
 
-            // Populate sensor data
-            mobj->mutable_id()->set_value(sensor[i]->hitList_[j].obj_->id_);
-			mobj->mutable_base()->mutable_position()->set_x(sensor[i]->hitList_[j].x_ + sensor[i]->hitList_[j].obj_->boundingbox_.center_.x_*cos(sensor[i]->hitList_[j].yaw_));
-			mobj->mutable_base()->mutable_position()->set_y(sensor[i]->hitList_[j].y_ + sensor[i]->hitList_[j].obj_->boundingbox_.center_.x_*sin(sensor[i]->hitList_[j].yaw_));
+			// Populate sensor data
+			mobj->mutable_id()->set_value(sensor[i]->hitList_[j].obj_->id_);
+			mobj->mutable_base()->mutable_position()->set_x(sensor[i]->hitList_[j].x_ + sensor[i]->hitList_[j].obj_->boundingbox_.center_.x_ * cos(sensor[i]->hitList_[j].yaw_));
+			mobj->mutable_base()->mutable_position()->set_y(sensor[i]->hitList_[j].y_ + sensor[i]->hitList_[j].obj_->boundingbox_.center_.x_ * sin(sensor[i]->hitList_[j].yaw_));
 			mobj->mutable_base()->mutable_position()->set_z(sensor[i]->hitList_[j].z_);
 			mobj->mutable_base()->mutable_velocity()->set_x(sensor[i]->hitList_[j].velX_);
 			mobj->mutable_base()->mutable_velocity()->set_y(sensor[i]->hitList_[j].velY_);
@@ -218,14 +221,13 @@ void OSIReporter::ReportSensors(std::vector<ObjectSensor*> sensor)
 			mobj->mutable_base()->mutable_dimension()->set_height(sensor[i]->hitList_[j].obj_->boundingbox_.dimensions_.height_);
 			mobj->mutable_base()->mutable_dimension()->set_length(sensor[i]->hitList_[j].obj_->boundingbox_.dimensions_.length_);
 			mobj->mutable_base()->mutable_dimension()->set_width(sensor[i]->hitList_[j].obj_->boundingbox_.dimensions_.width_);
-
 		}
 	}
 }
 
-bool OSIReporter::OpenOSIFile(const char* filename)
+bool OSIReporter::OpenOSIFile(const char *filename)
 {
-	const char* f = (filename == 0 || !strcmp(filename, "")) ? "ground_truth.osi" : filename;
+	const char *f = (filename == 0 || !strcmp(filename, "")) ? "ground_truth.osi" : filename;
 	osi_file = std::ofstream(f, std::ios_base::binary);
 	if (!osi_file.good())
 	{
@@ -249,7 +251,7 @@ bool OSIReporter::WriteOSIFile()
 	}
 
 	// write to file, first size of message
-	osi_file.write((char*)&osiGroundTruth.size, sizeof(osiGroundTruth.size));
+	osi_file.write((char *)&osiGroundTruth.size, sizeof(osiGroundTruth.size));
 
 	// write to file, actual message - the groundtruth object including timestamp and moving objects
 	osi_file.write(osiGroundTruth.ground_truth.c_str(), osiGroundTruth.size);
@@ -280,7 +282,7 @@ int OSIReporter::ClearOSIGroundTruth()
 	return 0;
 }
 
-int OSIReporter::UpdateOSIGroundTruth(std::vector<ObjectState*> objectState)
+int OSIReporter::UpdateOSIGroundTruth(std::vector<ObjectState *> objectState)
 {
 	if (osi_update_counter_ == 0)
 	{
@@ -303,7 +305,7 @@ int OSIReporter::UpdateOSIGroundTruth(std::vector<ObjectState*> objectState)
 		for (osi_udp_buf.counter = 0, osi_udp_buf.datasize = 0; sentDataBytes < osiGroundTruth.size; osi_udp_buf.counter++)
 		{
 			osi_udp_buf.datasize = MIN(osiGroundTruth.size - sentDataBytes, OSI_MAX_UDP_DATA_SIZE);
-			memcpy(&osi_udp_buf.data, (char*)&osiGroundTruth.ground_truth.c_str()[sentDataBytes], osi_udp_buf.datasize);
+			memcpy(&osi_udp_buf.data, (char *)&osiGroundTruth.ground_truth.c_str()[sentDataBytes], osi_udp_buf.datasize);
 			int packSize = sizeof(osi_udp_buf) - (OSI_MAX_UDP_DATA_SIZE - osi_udp_buf.datasize);
 
 			if (sentDataBytes + osi_udp_buf.datasize >= osiGroundTruth.size)
@@ -311,7 +313,7 @@ int OSIReporter::UpdateOSIGroundTruth(std::vector<ObjectState*> objectState)
 				// Last package
 				osi_udp_buf.counter = -1;
 			}
-			int sendResult = sendto(sendSocket, (char*)&osi_udp_buf, packSize, 0, (struct sockaddr*)&recvAddr, sizeof(recvAddr));
+			int sendResult = sendto(sendSocket, (char *)&osi_udp_buf, packSize, 0, (struct sockaddr *)&recvAddr, sizeof(recvAddr));
 
 			if (sendResult != packSize)
 			{
@@ -338,16 +340,16 @@ int OSIReporter::UpdateOSIGroundTruth(std::vector<ObjectState*> objectState)
 	return 0;
 }
 
-int OSIReporter::UpdateOSIStaticGroundTruth(std::vector<ObjectState*> objectState)
+int OSIReporter::UpdateOSIStaticGroundTruth(std::vector<ObjectState *> objectState)
 {
 	for (size_t i = 0; i < objectState.size(); i++)
 	{
-		if(objectState[i]->state_.info.obj_type==static_cast<int>(Object::Type::VEHICLE) ||
-		objectState[i]->state_.info.obj_type==static_cast<int>(Object::Type::PEDESTRIAN))
+		if (objectState[i]->state_.info.obj_type == static_cast<int>(Object::Type::VEHICLE) ||
+			objectState[i]->state_.info.obj_type == static_cast<int>(Object::Type::PEDESTRIAN))
 		{
 			// do nothing
 		}
-		else if(objectState[i]->state_.info.obj_type==static_cast<int>(Object::Type::MISC_OBJECT))
+		else if (objectState[i]->state_.info.obj_type == static_cast<int>(Object::Type::MISC_OBJECT))
 		{
 			UpdateOSIStationaryObject(objectState[i]);
 		}
@@ -363,7 +365,7 @@ int OSIReporter::UpdateOSIStaticGroundTruth(std::vector<ObjectState*> objectStat
 	return 0;
 }
 
-int OSIReporter::UpdateOSIDynamicGroundTruth(std::vector<ObjectState*> objectState)
+int OSIReporter::UpdateOSIDynamicGroundTruth(std::vector<ObjectState *> objectState)
 {
 	if (IsTimeStampSetExplicit())
 	{
@@ -375,19 +377,17 @@ int OSIReporter::UpdateOSIDynamicGroundTruth(std::vector<ObjectState*> objectSta
 	{
 		// use timstamp from object state
 		obj_osi_internal.gt->mutable_timestamp()->set_seconds((int64_t)objectState[0]->state_.info.timeStamp);
-		obj_osi_internal.gt->mutable_timestamp()->set_nanos((uint32_t)(
-			(objectState[0]->state_.info.timeStamp - (int64_t)objectState[0]->state_.info.timeStamp) * 1e9)
-		);
+		obj_osi_internal.gt->mutable_timestamp()->set_nanos((uint32_t)((objectState[0]->state_.info.timeStamp - (int64_t)objectState[0]->state_.info.timeStamp) * 1e9));
 	}
 
 	for (size_t i = 0; i < objectState.size(); i++)
 	{
-		if(objectState[i]->state_.info.obj_type==static_cast<int>(Object::Type::VEHICLE) ||
-		objectState[i]->state_.info.obj_type==static_cast<int>(Object::Type::PEDESTRIAN))
+		if (objectState[i]->state_.info.obj_type == static_cast<int>(Object::Type::VEHICLE) ||
+			objectState[i]->state_.info.obj_type == static_cast<int>(Object::Type::PEDESTRIAN))
 		{
 			UpdateOSIMovingObject(objectState[i]);
 		}
-		else if(objectState[i]->state_.info.obj_type==static_cast<int>(Object::Type::MISC_OBJECT))
+		else if (objectState[i]->state_.info.obj_type == static_cast<int>(Object::Type::MISC_OBJECT))
 		{
 			// do nothing
 		}
@@ -400,9 +400,9 @@ int OSIReporter::UpdateOSIDynamicGroundTruth(std::vector<ObjectState*> objectSta
 	return 0;
 }
 
-int OSIReporter::UpdateOSIHostVehicleData(ObjectState* objectState)
+int OSIReporter::UpdateOSIHostVehicleData(ObjectState *objectState)
 {
-	(void)objectState;  // avoid compiler warning
+	(void)objectState; // avoid compiler warning
 	// obj_osi_internal.sv->mutable_host_vehicle_data()->mutable_location()->mutable_position()->set_x(objectState->state_.pos.GetX());
 	// obj_osi_internal.sv->mutable_host_vehicle_data()->mutable_location()->mutable_position()->set_y(objectState->state_.pos.GetY());
 	// obj_osi_internal.sv->mutable_host_vehicle_data()->mutable_location()->mutable_position()->set_z(objectState->state_.pos.GetZ());
@@ -422,19 +422,19 @@ int OSIReporter::UpdateOSIHostVehicleData(ObjectState* objectState)
 	return 0;
 }
 
-int OSIReporter::UpdateOSIStationaryObject(ObjectState* objectState)
+int OSIReporter::UpdateOSIStationaryObject(ObjectState *objectState)
 {
 	// Create OSI Stationary Object
 	obj_osi_internal.sobj = obj_osi_internal.gt->add_stationary_object();
 
 	// Set OSI Stationary Object Mutable ID
 	int sobj_size = obj_osi_internal.gt->mutable_stationary_object()->size();
-	obj_osi_internal.sobj->mutable_id()->set_value(sobj_size-1);
+	obj_osi_internal.sobj->mutable_id()->set_value(sobj_size - 1);
 
 	// Set OSI Stationary Object Type and Classification
-	if(objectState->state_.info.obj_type == static_cast<int>(Object::Type::MISC_OBJECT))
+	if (objectState->state_.info.obj_type == static_cast<int>(Object::Type::MISC_OBJECT))
 	{
-		if(objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::NONE))
+		if (objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::NONE))
 		{
 			obj_osi_internal.sobj->mutable_classification()->set_type(osi3::StationaryObject_Classification_Type::StationaryObject_Classification_Type_TYPE_UNKNOWN);
 		}
@@ -459,16 +459,16 @@ int OSIReporter::UpdateOSIStationaryObject(ObjectState* objectState)
 			obj_osi_internal.sobj->mutable_classification()->set_type(osi3::StationaryObject_Classification_Type::StationaryObject_Classification_Type_TYPE_BUILDING);
 		}
 		else if (objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::OBSTACLE) ||
-				objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::PARKINGSPACE) ||
-				objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::RAILING) ||
-				objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::PATCH) ||
-				objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::TRAFFICISLAND) ||
-				objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::CROSSWALK) ||
-				objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::STREETLAMP) ||
-				objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::GANTRY) ||
-				objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::SOUNDBARRIER) ||
-				objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::WIND) ||
-				objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::ROADMARK))
+				 objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::PARKINGSPACE) ||
+				 objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::RAILING) ||
+				 objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::PATCH) ||
+				 objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::TRAFFICISLAND) ||
+				 objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::CROSSWALK) ||
+				 objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::STREETLAMP) ||
+				 objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::GANTRY) ||
+				 objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::SOUNDBARRIER) ||
+				 objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::WIND) ||
+				 objectState->state_.info.obj_category == static_cast<int>(MiscObject::Category::ROADMARK))
 		{
 			obj_osi_internal.sobj->mutable_classification()->set_type(osi3::StationaryObject_Classification_Type::StationaryObject_Classification_Type_TYPE_OTHER);
 		}
@@ -489,8 +489,8 @@ int OSIReporter::UpdateOSIStationaryObject(ObjectState* objectState)
 	obj_osi_internal.sobj->mutable_base()->mutable_dimension()->set_length(objectState->state_.info.boundingbox.dimensions_.length_);
 
 	// Set OSI Stationary Object Position
-	obj_osi_internal.sobj->mutable_base()->mutable_position()->set_x(objectState->state_.pos.GetX() + objectState->state_.info.boundingbox.center_.x_*cos(objectState->state_.pos.GetH()));
-	obj_osi_internal.sobj->mutable_base()->mutable_position()->set_y(objectState->state_.pos.GetY() + objectState->state_.info.boundingbox.center_.x_*sin(objectState->state_.pos.GetH()));
+	obj_osi_internal.sobj->mutable_base()->mutable_position()->set_x(objectState->state_.pos.GetX() + objectState->state_.info.boundingbox.center_.x_ * cos(objectState->state_.pos.GetH()));
+	obj_osi_internal.sobj->mutable_base()->mutable_position()->set_y(objectState->state_.pos.GetY() + objectState->state_.info.boundingbox.center_.x_ * sin(objectState->state_.pos.GetH()));
 	obj_osi_internal.sobj->mutable_base()->mutable_position()->set_z(objectState->state_.pos.GetZ());
 
 	// Set OSI Stationary Object Orientation
@@ -501,21 +501,21 @@ int OSIReporter::UpdateOSIStationaryObject(ObjectState* objectState)
 	return 0;
 }
 
-int OSIReporter::UpdateOSIMovingObject(ObjectState* objectState)
+int OSIReporter::UpdateOSIMovingObject(ObjectState *objectState)
 {
 	// Create OSI Moving object
 	obj_osi_internal.mobj = obj_osi_internal.gt->add_moving_object();
 
 	// Set OSI Moving Object Mutable ID
 	int mobj_size = obj_osi_internal.gt->mutable_moving_object()->size();
-	obj_osi_internal.mobj->mutable_id()->set_value(mobj_size-1);
+	obj_osi_internal.mobj->mutable_id()->set_value(mobj_size - 1);
 
 	// Set OSI Moving Object Type and Classification
-	if(objectState->state_.info.obj_type == static_cast<int>(Object::Type::VEHICLE))
+	if (objectState->state_.info.obj_type == static_cast<int>(Object::Type::VEHICLE))
 	{
 		obj_osi_internal.mobj->set_type(osi3::MovingObject::Type::MovingObject_Type_TYPE_VEHICLE);
 
-		if(objectState->state_.info.obj_category == static_cast<int>(Vehicle::Category::CAR))
+		if (objectState->state_.info.obj_category == static_cast<int>(Vehicle::Category::CAR))
 		{
 			obj_osi_internal.mobj->mutable_vehicle_classification()->set_type(osi3::MovingObject_VehicleClassification::TYPE_MEDIUM_CAR);
 		}
@@ -555,15 +555,15 @@ int OSIReporter::UpdateOSIMovingObject(ObjectState* objectState)
 	}
 	else if (objectState->state_.info.obj_type == static_cast<int>(Object::Type::PEDESTRIAN))
 	{
-		if (objectState->state_.info.obj_category==static_cast<int>(Pedestrian::Category::PEDESTRIAN))
+		if (objectState->state_.info.obj_category == static_cast<int>(Pedestrian::Category::PEDESTRIAN))
 		{
 			obj_osi_internal.mobj->set_type(osi3::MovingObject::Type::MovingObject_Type_TYPE_PEDESTRIAN);
 		}
-		else if (objectState->state_.info.obj_category==static_cast<int>(Pedestrian::Category::ANIMAL))
+		else if (objectState->state_.info.obj_category == static_cast<int>(Pedestrian::Category::ANIMAL))
 		{
 			obj_osi_internal.mobj->set_type(osi3::MovingObject::Type::MovingObject_Type_TYPE_ANIMAL);
 		}
-		else if (objectState->state_.info.obj_category==static_cast<int>(Pedestrian::Category::WHEELCHAIR))
+		else if (objectState->state_.info.obj_category == static_cast<int>(Pedestrian::Category::WHEELCHAIR))
 		{
 			obj_osi_internal.mobj->set_type(osi3::MovingObject::Type::MovingObject_Type_TYPE_OTHER);
 		}
@@ -590,8 +590,8 @@ int OSIReporter::UpdateOSIMovingObject(ObjectState* objectState)
 	obj_osi_internal.mobj->mutable_base()->mutable_dimension()->set_length(objectState->state_.info.boundingbox.dimensions_.length_);
 
 	// Set OSI Moving Object Position
-	obj_osi_internal.mobj->mutable_base()->mutable_position()->set_x(objectState->state_.pos.GetX() + objectState->state_.info.boundingbox.center_.x_*cos(objectState->state_.pos.GetH()));
-	obj_osi_internal.mobj->mutable_base()->mutable_position()->set_y(objectState->state_.pos.GetY() + objectState->state_.info.boundingbox.center_.x_*sin(objectState->state_.pos.GetH()));
+	obj_osi_internal.mobj->mutable_base()->mutable_position()->set_x(objectState->state_.pos.GetX() + objectState->state_.info.boundingbox.center_.x_ * cos(objectState->state_.pos.GetH()));
+	obj_osi_internal.mobj->mutable_base()->mutable_position()->set_y(objectState->state_.pos.GetY() + objectState->state_.info.boundingbox.center_.x_ * sin(objectState->state_.pos.GetH()));
 	obj_osi_internal.mobj->mutable_base()->mutable_position()->set_z(objectState->state_.pos.GetZ());
 
 	// Set OSI Moving Object Orientation
@@ -615,16 +615,45 @@ int OSIReporter::UpdateOSIMovingObject(ObjectState* objectState)
 	obj_osi_internal.mobj->mutable_base()->mutable_acceleration()->set_y(objectState->state_.pos.GetAccY());
 	obj_osi_internal.mobj->mutable_base()->mutable_acceleration()->set_z(objectState->state_.pos.GetAccZ());
 
-	// Set OSI Moving Object Lane ID
-	obj_osi_internal.mobj->add_assigned_lane_id()->set_value(objectState->state_.pos.GetLaneGlobalId());
+	//todo
+	// Set OSI Moving Object Lane ID based on lane pairing
 
+	// find the current lane by objectState->state_.pos.GetLaneGlobalId()
+	//printf("Debug in OSIReporter::UpdateOSIMovingObject: current lane global ID: %d.\n", objectState->state_.pos.GetLaneGlobalId());
+
+	// loop over the lanes
+	for (int i = 0; i < obj_osi_internal.gt->lane_size(); ++i)
+	{
+		// find the current lane by lane global id from groundtruth
+		if (objectState->state_.pos.GetLaneGlobalId() == obj_osi_internal.gt->lane(i).id().value())
+		{	
+			osi3::Lane *currentlane = obj_osi_internal.gt->mutable_lane(i);
+			for (int j = 0; j < currentlane->mutable_classification()->lane_pairing().size(); ++j)
+			{
+				// not all lanes have successor
+				if (currentlane->classification().lane_pairing()[j].has_successor_lane_id())
+				{
+					google::protobuf::uint64 successorid = currentlane->classification().lane_pairing()[j].successor_lane_id().value();
+					obj_osi_internal.mobj->add_assigned_lane_id()->set_value(objectState->state_.pos.GetLaneGlobalId());
+
+					// add successor of the current raod in osi
+					obj_osi_internal.mobj->add_assigned_lane_id()->set_value(successorid);
+					//printf("successor Lane ID set as %i.\n", successorid);
+				}
+				// else
+				// {
+				// 	printf("current lane has no successor.\n");
+				// }
+			}
+		}
+	}
 	return 0;
 }
 
 int OSIReporter::UpdateOSIIntersection()
 {
 	// NOTE: for free_lane_boundary this algoritm will only work for open drive solid roadmarks in the junction (or atleast the outest driving lane's roadmark)
-	
+
 	// tolerance to check if points are close or not
 	double tolerance = 0.01;
 
@@ -634,9 +663,9 @@ int OSIReporter::UpdateOSIIntersection()
 		double length;
 		int global_id;
 		roadmanager::OSIPoints *osipoints;
-		
+
 	} LaneLengthStruct;
-	
+
 	roadmanager::Junction *junction;
 	roadmanager::Connection *connection;
 	roadmanager::JunctionLaneLink *junctionlanelink;
@@ -651,7 +680,7 @@ int OSIReporter::UpdateOSIIntersection()
 	double incomming_s_value;
 	double outgoing_s_value;
 	double connecting_outgoing_s_value;
-	
+
 	// value for the linktype for the connecting road and the outgoing road
 	roadmanager::LinkType connecting_road_link_type = roadmanager::LinkType::NONE;
 	// value for the linktype for the incomming road and the connecting road
@@ -662,9 +691,9 @@ int OSIReporter::UpdateOSIIntersection()
 	int g_id;
 	roadmanager::OSIPoints *osipoints;
 
-	static roadmanager::OpenDrive* opendrive = roadmanager::Position::GetOpenDrive();
-	osi3::Lane* osi_lane;
-	for (int i=0; i<opendrive->GetNumOfJunctions(); i++)
+	static roadmanager::OpenDrive *opendrive = roadmanager::Position::GetOpenDrive();
+	osi3::Lane *osi_lane;
+	for (int i = 0; i < opendrive->GetNumOfJunctions(); i++)
 	{
 		std::vector<LaneLengthStruct> left_lane_lengths;
 		std::vector<LaneLengthStruct> right_lane_lengths;
@@ -673,8 +702,8 @@ int OSIReporter::UpdateOSIIntersection()
 		std::set<int> connected_roads;
 		// //add check if it is an intersection or an highway exit/entry
 		junction = opendrive->GetJunctionByIdx(i);
-		
-		// check if the first road is of type highway, then assumes it is not a intersection 
+
+		// check if the first road is of type highway, then assumes it is not a intersection
 		if (junction->IsOsiIntersection())
 		{
 
@@ -682,37 +711,34 @@ int OSIReporter::UpdateOSIIntersection()
 			osi_lane = obj_osi_internal.gt->add_lane();
 			osi_lane->mutable_id()->set_value(junction->GetGlobalId());
 			osi_lane->mutable_classification()->set_type(osi3::Lane_Classification_Type::Lane_Classification_Type_TYPE_INTERSECTION);
-			
 
 			// check all connections in the junction
-			for (int j=0; j<junction->GetNumberOfConnections();j++)
+			for (int j = 0; j < junction->GetNumberOfConnections(); j++)
 			{
 				connection = junction->GetConnectionByIdx(j);
 				incomming_road = connection->GetIncomingRoad();
 				connecting_road = connection->GetConnectingRoad();
 				new_connecting_road = true;
-				
 
 				// check if the connecting road has been used before
-				for (int l=0; l<(int)lane_lengths.size(); l++)
+				for (int l = 0; l < (int)lane_lengths.size(); l++)
 				{
 					if (lane_lengths[l].id == connecting_road->GetId())
 					{
 						new_connecting_road = false;
 					}
 				}
-				
-				for (int l=0; l<(int)left_lane_lengths.size(); l++)
+
+				for (int l = 0; l < (int)left_lane_lengths.size(); l++)
 				{
 					if (left_lane_lengths[l].id == connecting_road->GetId())
 					{
 						new_connecting_road = false;
 					}
 				}
-				
 
 				// get needed info about the incomming road
-				if (incomming_road->GetLink(roadmanager::LinkType::SUCCESSOR) != 0) 
+				if (incomming_road->GetLink(roadmanager::LinkType::SUCCESSOR) != 0)
 				{
 					if (incomming_road->GetLink(roadmanager::LinkType::SUCCESSOR)->GetElementId() == connecting_road->GetJunction())
 					{
@@ -730,7 +756,7 @@ int OSIReporter::UpdateOSIIntersection()
 					incomming_s_value = 0;
 					incomming_road_link_type = roadmanager::LinkType::PREDECESSOR;
 				}
-				
+
 				// Get info about the connecting road, and to get the correct outgoing road
 				contactpoint = connection->GetContactPoint();
 				if (contactpoint == roadmanager::ContactPointType::CONTACT_POINT_START)
@@ -738,14 +764,12 @@ int OSIReporter::UpdateOSIIntersection()
 					connecting_road_link_type = roadmanager::LinkType::SUCCESSOR;
 					roadlink = connecting_road->GetLink(connecting_road_link_type);
 					connecting_outgoing_s_value = connecting_road->GetLength();
-					
-				} 
+				}
 				else if (contactpoint == roadmanager::ContactPointType::CONTACT_POINT_END)
 				{
 					connecting_road_link_type = roadmanager::LinkType::PREDECESSOR;
 					roadlink = connecting_road->GetLink(connecting_road_link_type);
 					connecting_outgoing_s_value = 0;
-					
 				}
 				else
 				{
@@ -756,7 +780,7 @@ int OSIReporter::UpdateOSIIntersection()
 				connected_roads.insert(incomming_road->GetId());
 				connected_roads.insert(outgoing_road->GetId());
 				// Get neccesary info about the outgoing road
-				if (outgoing_road->GetLink(roadmanager::LinkType::SUCCESSOR) != 0 )
+				if (outgoing_road->GetLink(roadmanager::LinkType::SUCCESSOR) != 0)
 				{
 					if (outgoing_road->GetLink(roadmanager::LinkType::SUCCESSOR)->GetElementId() == connecting_road->GetJunction())
 					{
@@ -776,27 +800,27 @@ int OSIReporter::UpdateOSIIntersection()
 				{
 
 					left_lane_struct.id = connecting_road->GetId();
-					left_lane_struct.length = LARGE_NUMBER; 
+					left_lane_struct.length = LARGE_NUMBER;
 					right_lane_struct.id = connecting_road->GetId();
 					right_lane_struct.length = LARGE_NUMBER;
-					
-					for (int l_id=1;l_id<=connecting_road->GetLaneSectionByS(0,0)->GetNUmberOfLanesRight();l_id++)
-					{	
-						if(connecting_road->GetLaneSectionByS(0,0)->GetLaneById(-l_id)->IsDriving())
-						{	
-							// check if an roadmark exist or use a laneboundary 
+
+					for (int l_id = 1; l_id <= connecting_road->GetLaneSectionByS(0, 0)->GetNUmberOfLanesRight(); l_id++)
+					{
+						if (connecting_road->GetLaneSectionByS(0, 0)->GetLaneById(-l_id)->IsDriving())
+						{
+							// check if an roadmark exist or use a laneboundary
 							//NOTE: assumes only simple lines in an intersection
-							if (connecting_road->GetLaneSectionByS(0,0)->GetLaneById(-l_id)->GetLaneBoundaryGlobalId() != -1)
+							if (connecting_road->GetLaneSectionByS(0, 0)->GetLaneById(-l_id)->GetLaneBoundaryGlobalId() != -1)
 							{
-								osipoints = connecting_road->GetLaneSectionByS(0,0)->GetLaneById(-l_id)->GetLaneBoundary()->GetOSIPoints();
+								osipoints = connecting_road->GetLaneSectionByS(0, 0)->GetLaneById(-l_id)->GetLaneBoundary()->GetOSIPoints();
 								length = osipoints->GetLength();
-								g_id = connecting_road->GetLaneSectionByS(0,0)->GetLaneById(-l_id)->GetLaneBoundary()->GetGlobalId();
+								g_id = connecting_road->GetLaneSectionByS(0, 0)->GetLaneById(-l_id)->GetLaneBoundary()->GetGlobalId();
 							}
 							else
 							{
-								osipoints = connecting_road->GetLaneSectionByS(0,0)->GetLaneById(-l_id)->GetLaneRoadMarkByIdx(0)->GetLaneRoadMarkTypeByIdx(0)->GetLaneRoadMarkTypeLineByIdx(0)->GetOSIPoints();
-								length = connecting_road->GetLaneSectionByS(0,0)->GetLaneById(-l_id)->GetLaneRoadMarkByIdx(0)->GetLaneRoadMarkTypeByIdx(0)->GetLaneRoadMarkTypeLineByIdx(0)->GetOSIPoints()->GetLength();
-								g_id = connecting_road->GetLaneSectionByS(0,0)->GetLaneById(-l_id)->GetLaneRoadMarkByIdx(0)->GetLaneRoadMarkTypeByIdx(0)->GetLaneRoadMarkTypeLineByIdx(0)->GetGlobalId();
+								osipoints = connecting_road->GetLaneSectionByS(0, 0)->GetLaneById(-l_id)->GetLaneRoadMarkByIdx(0)->GetLaneRoadMarkTypeByIdx(0)->GetLaneRoadMarkTypeLineByIdx(0)->GetOSIPoints();
+								length = connecting_road->GetLaneSectionByS(0, 0)->GetLaneById(-l_id)->GetLaneRoadMarkByIdx(0)->GetLaneRoadMarkTypeByIdx(0)->GetLaneRoadMarkTypeLineByIdx(0)->GetOSIPoints()->GetLength();
+								g_id = connecting_road->GetLaneSectionByS(0, 0)->GetLaneById(-l_id)->GetLaneRoadMarkByIdx(0)->GetLaneRoadMarkTypeByIdx(0)->GetLaneRoadMarkTypeLineByIdx(0)->GetGlobalId();
 							}
 							if ((right_lane_struct.length > length) || (fabs(right_lane_struct.length - length) < tolerance))
 							{
@@ -806,21 +830,21 @@ int OSIReporter::UpdateOSIIntersection()
 							}
 						}
 					}
-					for (int l_id=1;l_id<=connecting_road->GetLaneSectionByS(0,0)->GetNUmberOfLanesLeft();l_id++)
-					{	
-						if(connecting_road->GetLaneSectionByS(0)->GetLaneById(l_id)->IsDriving())
-						{	
-							if (connecting_road->GetLaneSectionByS(0,0)->GetLaneById(l_id)->GetLaneBoundaryGlobalId() != -1)
+					for (int l_id = 1; l_id <= connecting_road->GetLaneSectionByS(0, 0)->GetNUmberOfLanesLeft(); l_id++)
+					{
+						if (connecting_road->GetLaneSectionByS(0)->GetLaneById(l_id)->IsDriving())
+						{
+							if (connecting_road->GetLaneSectionByS(0, 0)->GetLaneById(l_id)->GetLaneBoundaryGlobalId() != -1)
 							{
-								osipoints = connecting_road->GetLaneSectionByS(0,0)->GetLaneById(l_id)->GetLaneBoundary()->GetOSIPoints();
-								length = connecting_road->GetLaneSectionByS(0,0)->GetLaneById(l_id)->GetLaneBoundary()->GetOSIPoints()->GetLength();
-								g_id = connecting_road->GetLaneSectionByS(0,0)->GetLaneById(l_id)->GetLaneBoundary()->GetGlobalId();
+								osipoints = connecting_road->GetLaneSectionByS(0, 0)->GetLaneById(l_id)->GetLaneBoundary()->GetOSIPoints();
+								length = connecting_road->GetLaneSectionByS(0, 0)->GetLaneById(l_id)->GetLaneBoundary()->GetOSIPoints()->GetLength();
+								g_id = connecting_road->GetLaneSectionByS(0, 0)->GetLaneById(l_id)->GetLaneBoundary()->GetGlobalId();
 							}
 							else
 							{
-								osipoints = connecting_road->GetLaneSectionByS(0,0)->GetLaneById(l_id)->GetLaneRoadMarkByIdx(0)->GetLaneRoadMarkTypeByIdx(0)->GetLaneRoadMarkTypeLineByIdx(0)->GetOSIPoints();
-								length = connecting_road->GetLaneSectionByS(0,0)->GetLaneById(l_id)->GetLaneRoadMarkByIdx(0)->GetLaneRoadMarkTypeByIdx(0)->GetLaneRoadMarkTypeLineByIdx(0)->GetOSIPoints()->GetLength();
-								g_id = connecting_road->GetLaneSectionByS(0,0)->GetLaneById(l_id)->GetLaneRoadMarkByIdx(0)->GetLaneRoadMarkTypeByIdx(0)->GetLaneRoadMarkTypeLineByIdx(0)->GetGlobalId();
+								osipoints = connecting_road->GetLaneSectionByS(0, 0)->GetLaneById(l_id)->GetLaneRoadMarkByIdx(0)->GetLaneRoadMarkTypeByIdx(0)->GetLaneRoadMarkTypeLineByIdx(0)->GetOSIPoints();
+								length = connecting_road->GetLaneSectionByS(0, 0)->GetLaneById(l_id)->GetLaneRoadMarkByIdx(0)->GetLaneRoadMarkTypeByIdx(0)->GetLaneRoadMarkTypeLineByIdx(0)->GetOSIPoints()->GetLength();
+								g_id = connecting_road->GetLaneSectionByS(0, 0)->GetLaneById(l_id)->GetLaneRoadMarkByIdx(0)->GetLaneRoadMarkTypeByIdx(0)->GetLaneRoadMarkTypeLineByIdx(0)->GetGlobalId();
 							}
 							if ((left_lane_struct.length > length) || (fabs(right_lane_struct.length - length) < tolerance))
 							{
@@ -829,8 +853,8 @@ int OSIReporter::UpdateOSIIntersection()
 								left_lane_struct.osipoints = osipoints;
 							}
 						}
-					}	
-					if (fabs(left_lane_struct.length - right_lane_struct.length) < SMALL_NUMBER) 
+					}
+					if (fabs(left_lane_struct.length - right_lane_struct.length) < SMALL_NUMBER)
 					{
 						left_lane_lengths.push_back(left_lane_struct);
 						right_lane_lengths.push_back(right_lane_struct);
@@ -848,28 +872,28 @@ int OSIReporter::UpdateOSIIntersection()
 					}
 				}
 				// create all lane parings for the junction
-				for (int l=0; l<connection->GetNumberOfLaneLinks();l++){
+				for (int l = 0; l < connection->GetNumberOfLaneLinks(); l++)
+				{
 					junctionlanelink = connection->GetLaneLink(l);
 					// check if the connecting road has been checked before, otherwise get the shortest laneboundary
-					
-					
-					
+
 					// TODO: will only work for right hand traffic right now
 					if (((incomming_road_link_type == roadmanager::LinkType::SUCCESSOR && junctionlanelink->from_ < 0) ||
-						(incomming_road_link_type == roadmanager::LinkType::PREDECESSOR && junctionlanelink->from_ > 0)) && 
-						incomming_road->GetDrivingLaneById(incomming_s_value,junctionlanelink->from_) != 0)
+						 (incomming_road_link_type == roadmanager::LinkType::PREDECESSOR && junctionlanelink->from_ > 0)) &&
+						incomming_road->GetDrivingLaneById(incomming_s_value, junctionlanelink->from_) != 0)
 					{
 						osi3::Lane_Classification_LanePairing *laneparing = osi_lane->mutable_classification()->add_lane_pairing();
-						laneparing->mutable_antecessor_lane_id()->set_value(incomming_road->GetDrivingLaneById(incomming_s_value,junctionlanelink->from_)->GetGlobalId());
-						laneparing->mutable_successor_lane_id()->set_value(outgoing_road->GetDrivingLaneById(outgoing_s_value, 
-							connecting_road->GetDrivingLaneById(connecting_outgoing_s_value, junctionlanelink->to_)->GetLink(connecting_road_link_type)->GetId())->GetGlobalId());
-						for(int k = 0; k < obj_osi_internal.gt->lane_size(); ++k)
+						laneparing->mutable_antecessor_lane_id()->set_value(incomming_road->GetDrivingLaneById(incomming_s_value, junctionlanelink->from_)->GetGlobalId());
+						laneparing->mutable_successor_lane_id()->set_value(outgoing_road->GetDrivingLaneById(outgoing_s_value,
+																											 connecting_road->GetDrivingLaneById(connecting_outgoing_s_value, junctionlanelink->to_)->GetLink(connecting_road_link_type)->GetId())
+																			   ->GetGlobalId());
+						for (int k = 0; k < obj_osi_internal.gt->lane_size(); ++k)
 						{
-							if (incomming_road->GetDrivingLaneById(incomming_s_value,junctionlanelink->from_)->GetGlobalId() == obj_osi_internal.gt->lane(k).id().value())
+							if (incomming_road->GetDrivingLaneById(incomming_s_value, junctionlanelink->from_)->GetGlobalId() == obj_osi_internal.gt->lane(k).id().value())
 							{
 								if ((incomming_road->GetLink(roadmanager::LinkType::SUCCESSOR) != 0) && (incomming_road->GetLink(roadmanager::LinkType::SUCCESSOR)->GetElementType() == roadmanager::RoadLink::ELEMENT_TYPE_JUNCTION))
 								{
-								
+
 									if (obj_osi_internal.gt->mutable_lane(k)->mutable_classification()->lane_pairing_size() == 0)
 									{
 										obj_osi_internal.gt->mutable_lane(k)->mutable_classification()->add_lane_pairing();
@@ -883,15 +907,14 @@ int OSIReporter::UpdateOSIIntersection()
 									{
 										obj_osi_internal.gt->mutable_lane(k)->mutable_classification()->add_lane_pairing()->mutable_antecessor_lane_id()->set_value(junction->GetGlobalId());
 									}
-									
-								} 
+								}
 								else if ((incomming_road->GetLink(roadmanager::LinkType::PREDECESSOR) != 0) && (incomming_road->GetLink(roadmanager::LinkType::PREDECESSOR)->GetElementType() == roadmanager::RoadLink::ELEMENT_TYPE_JUNCTION))
 								{
 									if (obj_osi_internal.gt->mutable_lane(k)->mutable_classification()->lane_pairing_size() == 0)
 									{
 										obj_osi_internal.gt->mutable_lane(k)->mutable_classification()->add_lane_pairing();
 									}
-									
+
 									if (obj_osi_internal.gt->mutable_lane(k)->mutable_classification()->centerline_is_driving_direction())
 									{
 										obj_osi_internal.gt->mutable_lane(k)->mutable_classification()->add_lane_pairing()->mutable_antecessor_lane_id()->set_value(junction->GetGlobalId());
@@ -900,36 +923,34 @@ int OSIReporter::UpdateOSIIntersection()
 									{
 										obj_osi_internal.gt->mutable_lane(k)->mutable_classification()->add_lane_pairing()->mutable_successor_lane_id()->set_value(junction->GetGlobalId());
 									}
-
 								}
 								break;
-							}						
+							}
 						}
-
 					}
 				}
 			}
 			// sort the correct free-boundaries
-			for (int j=0;j<left_lane_lengths.size();j++)
+			for (int j = 0; j < left_lane_lengths.size(); j++)
 			{
-				// Tolerance for checking if 
-				
+				// Tolerance for checking if
+
 				bool keep_right = true;
 				bool keep_left = true;
-				for (int k=0;k<lane_lengths.size();k++)
+				for (int k = 0; k < lane_lengths.size(); k++)
 				{
-					int same_left = roadmanager::CheckOverlapingOSIPoints(left_lane_lengths[j].osipoints,lane_lengths[k].osipoints,tolerance);
-					if (same_left >0) 
+					int same_left = roadmanager::CheckOverlapingOSIPoints(left_lane_lengths[j].osipoints, lane_lengths[k].osipoints, tolerance);
+					if (same_left > 0)
 					{
 						keep_left = false;
 					}
-					int same_right = roadmanager::CheckOverlapingOSIPoints(right_lane_lengths[j].osipoints,lane_lengths[k].osipoints,tolerance);
-					if (same_right >0)
+					int same_right = roadmanager::CheckOverlapingOSIPoints(right_lane_lengths[j].osipoints, lane_lengths[k].osipoints, tolerance);
+					if (same_right > 0)
 					{
 						keep_right = false;
 					}
 				}
-				if (keep_left) 
+				if (keep_left)
 				{
 					tmp_lane_lengths.push_back(left_lane_lengths[j]);
 				}
@@ -938,32 +959,32 @@ int OSIReporter::UpdateOSIIntersection()
 					tmp_lane_lengths.push_back(right_lane_lengths[j]);
 				}
 			}
-			for (int j=0;j<tmp_lane_lengths.size();j++)
+			for (int j = 0; j < tmp_lane_lengths.size(); j++)
 			{
 				lane_lengths.push_back(tmp_lane_lengths[j]);
-			} 
+			}
 
 			if (lane_lengths.size() == connected_roads.size())
 			{
-				for (int j=0;j<lane_lengths.size();j++)
+				for (int j = 0; j < lane_lengths.size(); j++)
 				{
-					osi3::Identifier* free_lane_id = osi_lane->mutable_classification()->add_free_lane_boundary_id();
+					osi3::Identifier *free_lane_id = osi_lane->mutable_classification()->add_free_lane_boundary_id();
 					free_lane_id->set_value(lane_lengths[j].global_id);
-				}	
+				}
 			}
 			else
 			{
 				std::vector<int> ids_to_remove;
-				for (int j=0;j<lane_lengths.size();j++)
+				for (int j = 0; j < lane_lengths.size(); j++)
 				{
 					if (!(std::find(ids_to_remove.begin(), ids_to_remove.end(), j) != ids_to_remove.end()))
 					{
-						for (int k=0;k<lane_lengths.size();k++)
+						for (int k = 0; k < lane_lengths.size(); k++)
 						{
-							if (k!=j)
+							if (k != j)
 							{
-								int same_points = roadmanager::CheckOverlapingOSIPoints(lane_lengths[k].osipoints,lane_lengths[j].osipoints,tolerance);
-								if (same_points >0)
+								int same_points = roadmanager::CheckOverlapingOSIPoints(lane_lengths[k].osipoints, lane_lengths[j].osipoints, tolerance);
+								if (same_points > 0)
 								{
 									if (lane_lengths[k].length < lane_lengths[j].length)
 									{
@@ -974,122 +995,71 @@ int OSIReporter::UpdateOSIIntersection()
 										ids_to_remove.push_back(k);
 										continue;
 									}
-
 								}
 							}
 						}
 					}
 				}
-				
-				for (int j=0;j<lane_lengths.size();j++)
+
+				for (int j = 0; j < lane_lengths.size(); j++)
 				{
 					if (!(std::find(ids_to_remove.begin(), ids_to_remove.end(), j) != ids_to_remove.end()))
 					{
-						osi3::Identifier* free_lane_id = osi_lane->mutable_classification()->add_free_lane_boundary_id();
+						osi3::Identifier *free_lane_id = osi_lane->mutable_classification()->add_free_lane_boundary_id();
 						free_lane_id->set_value(lane_lengths[j].global_id);
 					}
-				}	
-				LOG("Issues with the Intersection %i for the osi free lane boundary, none will be added.",junction->GetId());
+				}
+				LOG("Issues with the Intersection %i for the osi free lane boundary, none will be added.", junction->GetId());
 			}
-		}	
+		}
 	}
-
-	// //Lets Update the antecessor and successor lanes of the lanes that are not intersections
-	// //Get all the intersection lanes, this lanes have the predecessor and successor lanes information
-	// std::vector<osi3::Lane*> IntersectionLanes;
-	// for(int i = 0; i < obj_osi_internal.gt->lane_size(); ++i)
-	// {
-	// 	if(obj_osi_internal.gt->lane(i).classification().type() == osi3::Lane_Classification_Type::Lane_Classification_Type_TYPE_INTERSECTION)
-	// 	{
-	// 		IntersectionLanes.push_back(obj_osi_internal.gt->mutable_lane(i));
-	// 	}
-	// }
-
-	// //For each lane in OSI groundTruth
-	// for(int i = 0; i < obj_osi_internal.gt->lane_size(); ++i)
-	// {
-	// 	//Check if the lane is in the intersection
-	// 	for(int j = 0; j < IntersectionLanes.size(); ++j)
-	// 	{
-	// 		for(int k = 0; k < IntersectionLanes[j]->classification().lane_pairing_size(); ++k)
-	// 		{
-	// 			//Check predecessors
-	// 			if(IntersectionLanes[j]->classification().lane_pairing()[k].has_antecessor_lane_id())
-	// 			{
-	// 				//It lane is in predecesor of the intersection
-	// 				if(obj_osi_internal.gt->lane(i).id().value() == IntersectionLanes[j]->classification().lane_pairing()[k].antecessor_lane_id().value())
-	// 				{
-	// 					//then we add the intersection ID to the successor of the lane
-	// 					if(obj_osi_internal.gt->mutable_lane(i)->mutable_classification()->lane_pairing_size() == 0)
-	// 					{
-	// 						obj_osi_internal.gt->mutable_lane(i)->mutable_classification()->add_lane_pairing()->mutable_successor_lane_id()->set_value(IntersectionLanes[j]->id().value());
-	// 					}
-	// 				}
-	// 			}
-
-	// 			//Check successors
-	// 			if(IntersectionLanes[j]->classification().lane_pairing()[k].has_successor_lane_id())
-	// 			{
-	// 				//It lane is in successor of the intersection
-	// 				if(obj_osi_internal.gt->lane(i).id().value() == IntersectionLanes[j]->classification().lane_pairing()[k].successor_lane_id().value())
-	// 				{
-	// 					//then we add the intersection ID to the predecessor of the lane
-	// 					if(obj_osi_internal.gt->mutable_lane(i)->mutable_classification()->lane_pairing_size() == 0)
-	// 					{
-	// 						obj_osi_internal.gt->mutable_lane(i)->mutable_classification()->add_lane_pairing()->mutable_antecessor_lane_id()->set_value(IntersectionLanes[j]->id().value());
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
 	return 0;
 }
 
-int OSIReporter::UpdateOSILaneBoundary(std::vector<ObjectState*> objectState)
+int OSIReporter::UpdateOSILaneBoundary(std::vector<ObjectState *> objectState)
 {
 	//Retrieve opendrive class from RoadManager
-	static roadmanager::OpenDrive* opendrive = roadmanager::Position::GetOpenDrive();
+	static roadmanager::OpenDrive *opendrive = roadmanager::Position::GetOpenDrive();
 
 	//Loop over all roads
-	for (int i = 0; i<opendrive->GetNumOfRoads(); i++)
+	for (int i = 0; i < opendrive->GetNumOfRoads(); i++)
 	{
 
-		roadmanager::Road* road = opendrive->GetRoadByIdx(i);
+		roadmanager::Road *road = opendrive->GetRoadByIdx(i);
 
 		// loop over all lane sections
-		for (int j= 0; j<road->GetNumberOfLaneSections(); j++)
+		for (int j = 0; j < road->GetNumberOfLaneSections(); j++)
 		{
-			roadmanager::LaneSection* lane_section = road->GetLaneSectionByIdx(j);
+			roadmanager::LaneSection *lane_section = road->GetLaneSectionByIdx(j);
 
 			// loop over all lanes
-			for (int k=0; k<lane_section->GetNumberOfLanes(); k++)
+			for (int k = 0; k < lane_section->GetNumberOfLanes(); k++)
 			{
-				roadmanager::Lane* lane = lane_section->GetLaneByIdx(k);
-				
+				roadmanager::Lane *lane = lane_section->GetLaneByIdx(k);
+
 				int n_roadmarks = lane->GetNumberOfRoadMarks();
 				if (n_roadmarks != 0) // if there are road marks
 				{
 					// loop over RoadMarks
 					for (int ii = 0; ii < lane->GetNumberOfRoadMarks(); ii++)
 					{
-						roadmanager::LaneRoadMark* laneroadmark = lane->GetLaneRoadMarkByIdx(ii);
+						roadmanager::LaneRoadMark *laneroadmark = lane->GetLaneRoadMarkByIdx(ii);
 
 						//loop over road mark types
 						for (int jj = 0; jj < laneroadmark->GetNumberOfRoadMarkTypes(); jj++)
 						{
-							roadmanager::LaneRoadMarkType* laneroadmarktype = laneroadmark->GetLaneRoadMarkTypeByIdx(jj);
+							roadmanager::LaneRoadMarkType *laneroadmarktype = laneroadmark->GetLaneRoadMarkTypeByIdx(jj);
 
 							// loop over LaneRoadMarkTypeLine
-							for (int kk = 0; kk< laneroadmarktype->GetNumberOfRoadMarkTypeLines(); kk++)
+							for (int kk = 0; kk < laneroadmarktype->GetNumberOfRoadMarkTypeLines(); kk++)
 							{
-								roadmanager::LaneRoadMarkTypeLine* laneroadmarktypeline = laneroadmarktype->GetLaneRoadMarkTypeLineByIdx(kk);
+								roadmanager::LaneRoadMarkTypeLine *laneroadmarktypeline = laneroadmarktype->GetLaneRoadMarkTypeLineByIdx(kk);
 
-								osi3::LaneBoundary* osi_laneboundary = 0;
+								osi3::LaneBoundary *osi_laneboundary = 0;
 								int line_id = laneroadmarktypeline->GetGlobalId();
 
 								// Check if this line is already pushed to OSI
-								for (int h=0; h < obj_osi_internal.lnb.size(); h++)
+								for (int h = 0; h < obj_osi_internal.lnb.size(); h++)
 								{
 									if (obj_osi_internal.lnb[h]->mutable_id()->value() == line_id)
 									{
@@ -1106,7 +1076,7 @@ int OSIReporter::UpdateOSILaneBoundary(std::vector<ObjectState*> objectState)
 									int n_osi_points = laneroadmarktypeline->GetOSIPoints()->GetNumOfOSIPoints();
 									for (int h = 0; h < n_osi_points; h++)
 									{
-										osi3::LaneBoundary_BoundaryPoint* boundary_point = osi_laneboundary->add_boundary_line();
+										osi3::LaneBoundary_BoundaryPoint *boundary_point = osi_laneboundary->add_boundary_line();
 										boundary_point->mutable_position()->set_x(laneroadmarktypeline->GetOSIPoints()->GetXfromIdx(h));
 										boundary_point->mutable_position()->set_y(laneroadmarktypeline->GetOSIPoints()->GetYfromIdx(h));
 										boundary_point->mutable_position()->set_z(laneroadmarktypeline->GetOSIPoints()->GetZfromIdx(h));
@@ -1117,45 +1087,47 @@ int OSIReporter::UpdateOSILaneBoundary(std::vector<ObjectState*> objectState)
 									// update classification type
 									osi3::LaneBoundary_Classification_Type classific_type;
 									osi3::LaneBoundary_Classification_Type osi_type = osi_laneboundary->mutable_classification()->type();
-									switch(laneroadmark->GetType())
+									switch (laneroadmark->GetType())
 									{
-										case roadmanager::LaneRoadMark::RoadMarkType::NONE_TYPE:
+									case roadmanager::LaneRoadMark::RoadMarkType::NONE_TYPE:
 										classific_type = osi3::LaneBoundary_Classification_Type::LaneBoundary_Classification_Type_TYPE_UNKNOWN;
 										break;
-										case roadmanager::LaneRoadMark::RoadMarkType::SOLID:
+									case roadmanager::LaneRoadMark::RoadMarkType::SOLID:
 										classific_type = osi3::LaneBoundary_Classification_Type::LaneBoundary_Classification_Type_TYPE_SOLID_LINE;
 										break;
-										case roadmanager::LaneRoadMark::RoadMarkType::BROKEN:
+									case roadmanager::LaneRoadMark::RoadMarkType::BROKEN:
 										classific_type = osi3::LaneBoundary_Classification_Type::LaneBoundary_Classification_Type_TYPE_DASHED_LINE;
 										break;
-										default: classific_type = osi3::LaneBoundary_Classification_Type::LaneBoundary_Classification_Type_TYPE_SOLID_LINE;
+									default:
+										classific_type = osi3::LaneBoundary_Classification_Type::LaneBoundary_Classification_Type_TYPE_SOLID_LINE;
 									}
 									osi_laneboundary->mutable_classification()->set_type(classific_type);
 									osi_type = osi_laneboundary->mutable_classification()->type();
 
 									// update classification color
 									osi3::LaneBoundary_Classification_Color classific_col;
-									switch(laneroadmark->GetColor())
+									switch (laneroadmark->GetColor())
 									{
-										case roadmanager::LaneRoadMark::RoadMarkColor::STANDARD_COLOR:
+									case roadmanager::LaneRoadMark::RoadMarkColor::STANDARD_COLOR:
 										classific_col = osi3::LaneBoundary_Classification_Color::LaneBoundary_Classification_Color_COLOR_WHITE;
 										break;
-										case roadmanager::LaneRoadMark::RoadMarkColor::BLUE:
+									case roadmanager::LaneRoadMark::RoadMarkColor::BLUE:
 										classific_col = osi3::LaneBoundary_Classification_Color::LaneBoundary_Classification_Color_COLOR_BLUE;
 										break;
-										case roadmanager::LaneRoadMark::RoadMarkColor::GREEN:
+									case roadmanager::LaneRoadMark::RoadMarkColor::GREEN:
 										classific_col = osi3::LaneBoundary_Classification_Color::LaneBoundary_Classification_Color_COLOR_GREEN;
 										break;
-										case roadmanager::LaneRoadMark::RoadMarkColor::RED:
+									case roadmanager::LaneRoadMark::RoadMarkColor::RED:
 										classific_col = osi3::LaneBoundary_Classification_Color::LaneBoundary_Classification_Color_COLOR_RED;
 										break;
-										case roadmanager::LaneRoadMark::RoadMarkColor::WHITE:
+									case roadmanager::LaneRoadMark::RoadMarkColor::WHITE:
 										classific_col = osi3::LaneBoundary_Classification_Color::LaneBoundary_Classification_Color_COLOR_WHITE;
 										break;
-										case roadmanager::LaneRoadMark::RoadMarkColor::YELLOW:
+									case roadmanager::LaneRoadMark::RoadMarkColor::YELLOW:
 										classific_col = osi3::LaneBoundary_Classification_Color::LaneBoundary_Classification_Color_COLOR_YELLOW;
 										break;
-										default: classific_col = osi3::LaneBoundary_Classification_Color::LaneBoundary_Classification_Color_COLOR_WHITE;
+									default:
+										classific_col = osi3::LaneBoundary_Classification_Color::LaneBoundary_Classification_Color_COLOR_WHITE;
 									}
 									osi_laneboundary->mutable_classification()->set_color(classific_col);
 
@@ -1163,7 +1135,6 @@ int OSIReporter::UpdateOSILaneBoundary(std::vector<ObjectState*> objectState)
 									//osi_laneboundary->mutable_classification()->mutable_limiting_structure_id(0)->set_value(0);
 
 									obj_osi_internal.lnb.push_back(osi_laneboundary);
-
 								}
 							}
 						}
@@ -1171,11 +1142,11 @@ int OSIReporter::UpdateOSILaneBoundary(std::vector<ObjectState*> objectState)
 				}
 				else // if there are no road marks I take the lane boundary
 				{
-					roadmanager::LaneBoundaryOSI* laneboundary = lane->GetLaneBoundary();
+					roadmanager::LaneBoundaryOSI *laneboundary = lane->GetLaneBoundary();
 					// Check if this line is already pushed to OSI
 					int boundary_id = laneboundary->GetGlobalId();
-					osi3::LaneBoundary* osi_laneboundary = 0;
-					for (int h=0; h < obj_osi_internal.lnb.size(); h++)
+					osi3::LaneBoundary *osi_laneboundary = 0;
+					for (int h = 0; h < obj_osi_internal.lnb.size(); h++)
 					{
 						if (obj_osi_internal.lnb[h]->mutable_id()->value() == boundary_id)
 						{
@@ -1192,7 +1163,7 @@ int OSIReporter::UpdateOSILaneBoundary(std::vector<ObjectState*> objectState)
 						int n_osi_points = laneboundary->GetOSIPoints()->GetNumOfOSIPoints();
 						for (int h = 0; h < n_osi_points; h++)
 						{
-							osi3::LaneBoundary_BoundaryPoint* boundary_point = osi_laneboundary->add_boundary_line();
+							osi3::LaneBoundary_BoundaryPoint *boundary_point = osi_laneboundary->add_boundary_line();
 							boundary_point->mutable_position()->set_x(laneboundary->GetOSIPoints()->GetXfromIdx(h));
 							boundary_point->mutable_position()->set_y(laneboundary->GetOSIPoints()->GetYfromIdx(h));
 							boundary_point->mutable_position()->set_z(laneboundary->GetOSIPoints()->GetZfromIdx(h));
@@ -1216,47 +1187,46 @@ int OSIReporter::UpdateOSILaneBoundary(std::vector<ObjectState*> objectState)
 	return 0;
 }
 
-int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
+int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState *> objectState)
 {
 	//Retrieve opendrive class from RoadManager
-	static roadmanager::OpenDrive* opendrive = roadmanager::Position::GetOpenDrive();
+	static roadmanager::OpenDrive *opendrive = roadmanager::Position::GetOpenDrive();
 
 	// Loop over all roads
-	for (int i = 0; i<opendrive->GetNumOfRoads(); i++)
+	for (int i = 0; i < opendrive->GetNumOfRoads(); i++)
 	{
 
-		roadmanager::Road* road = opendrive->GetRoadByIdx(i);
+		roadmanager::Road *road = opendrive->GetRoadByIdx(i);
 
 		//Get predecessor and successor roads if exists
-		roadmanager::Road* predecessorRoad = nullptr;
-		roadmanager::Road* successorRoad = nullptr;
-		if(road->GetLink(LinkType::PREDECESSOR))
+		roadmanager::Road *predecessorRoad = nullptr;
+		roadmanager::Road *successorRoad = nullptr;
+		if (road->GetLink(LinkType::PREDECESSOR))
 		{
 			predecessorRoad = opendrive->GetRoadByIdx(road->GetLink(LinkType::PREDECESSOR)->GetElementId());
 		}
-		if(road->GetLink(LinkType::SUCCESSOR))
+		if (road->GetLink(LinkType::SUCCESSOR))
 		{
 			successorRoad = opendrive->GetRoadByIdx(road->GetLink(LinkType::SUCCESSOR)->GetElementId());
 		}
 
 		// loop over all lane sections
-		for (int j= 0; j<road->GetNumberOfLaneSections(); j++)
+		for (int j = 0; j < road->GetNumberOfLaneSections(); j++)
 		{
-			roadmanager::LaneSection* lane_section = road->GetLaneSectionByIdx(j);
+			roadmanager::LaneSection *lane_section = road->GetLaneSectionByIdx(j);
 
 			// loop over all lanes
-			for (int k=0; k<lane_section->GetNumberOfLanes(); k++)
+			for (int k = 0; k < lane_section->GetNumberOfLanes(); k++)
 			{
-				roadmanager::Lane* lane = lane_section->GetLaneByIdx(k);
+				roadmanager::Lane *lane = lane_section->GetLaneByIdx(k);
 				if ((!lane->IsCenter() && !lane->IsOSIIntersection()))
 				{
-					osi3::Lane* osi_lane = 0;
+					osi3::Lane *osi_lane = 0;
 					int lane_global_id = lane->GetGlobalId();
 					int lane_id = lane->GetId();
 
-
 					// Check if this lane is already pushed to OSI - if yes just update
-					for (int jj=0; jj < obj_osi_internal.ln.size(); jj++)
+					for (int jj = 0; jj < obj_osi_internal.ln.size(); jj++)
 					{
 						if (obj_osi_internal.ln[jj]->mutable_id()->value() == lane_global_id)
 						{
@@ -1275,51 +1245,66 @@ int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
 						roadmanager::Lane::LaneType lanetype = lane->GetLaneType();
 						osi3::Lane_Classification_Type class_type = osi3::Lane_Classification_Type::Lane_Classification_Type_TYPE_UNKNOWN;
 
-						if (lanetype == roadmanager::Lane::LaneType::LANE_TYPE_DRIVING 		||
-							lanetype == roadmanager::Lane::LaneType::LANE_TYPE_PARKING		||
-							lanetype == roadmanager::Lane::LaneType::LANE_TYPE_BIDIRECTIONAL 	 )
+						if (lanetype == roadmanager::Lane::LaneType::LANE_TYPE_DRIVING ||
+							lanetype == roadmanager::Lane::LaneType::LANE_TYPE_PARKING ||
+							lanetype == roadmanager::Lane::LaneType::LANE_TYPE_BIDIRECTIONAL)
 						{
 							class_type = osi3::Lane_Classification_Type::Lane_Classification_Type_TYPE_DRIVING;
 						}
-						else if (lanetype == roadmanager::Lane::LaneType::LANE_TYPE_STOP 		||
-								lanetype == roadmanager::Lane::LaneType::LANE_TYPE_BIKING 		||
-								lanetype == roadmanager::Lane::LaneType::LANE_TYPE_SIDEWALK 	||
-								lanetype == roadmanager::Lane::LaneType::LANE_TYPE_BORDER   	||
-								lanetype == roadmanager::Lane::LaneType::LANE_TYPE_RESTRICTED   ||
-								lanetype == roadmanager::Lane::LaneType::LANE_TYPE_ROADMARKS    ||
-								lanetype == roadmanager::Lane::LaneType::LANE_TYPE_TRAM   		||
-								lanetype == roadmanager::Lane::LaneType::LANE_TYPE_RAIL   			 )
+						else if (lanetype == roadmanager::Lane::LaneType::LANE_TYPE_STOP ||
+								 lanetype == roadmanager::Lane::LaneType::LANE_TYPE_BIKING ||
+								 lanetype == roadmanager::Lane::LaneType::LANE_TYPE_SIDEWALK ||
+								 lanetype == roadmanager::Lane::LaneType::LANE_TYPE_BORDER ||
+								 lanetype == roadmanager::Lane::LaneType::LANE_TYPE_RESTRICTED ||
+								 lanetype == roadmanager::Lane::LaneType::LANE_TYPE_ROADMARKS ||
+								 lanetype == roadmanager::Lane::LaneType::LANE_TYPE_TRAM ||
+								 lanetype == roadmanager::Lane::LaneType::LANE_TYPE_RAIL)
 						{
 							class_type = osi3::Lane_Classification_Type::Lane_Classification_Type_TYPE_NONDRIVING;
 						}
-						else if (lanetype == roadmanager::Lane::LaneType::LANE_TYPE_ENTRY 		||
-								lanetype == roadmanager::Lane::LaneType::LANE_TYPE_EXIT 		||
-								lanetype == roadmanager::Lane::LaneType::LANE_TYPE_OFF_RAMP 	||
-								lanetype == roadmanager::Lane::LaneType::LANE_TYPE_ON_RAMP 		||
-								lanetype == roadmanager::Lane::LaneType::LANE_TYPE_MEDIAN 		||
-								lanetype == roadmanager::Lane::LaneType::LANE_TYPE_SHOULDER 		 )
+						else if (lanetype == roadmanager::Lane::LaneType::LANE_TYPE_ENTRY ||
+								 lanetype == roadmanager::Lane::LaneType::LANE_TYPE_EXIT ||
+								 lanetype == roadmanager::Lane::LaneType::LANE_TYPE_OFF_RAMP ||
+								 lanetype == roadmanager::Lane::LaneType::LANE_TYPE_ON_RAMP ||
+								 lanetype == roadmanager::Lane::LaneType::LANE_TYPE_MEDIAN ||
+								 lanetype == roadmanager::Lane::LaneType::LANE_TYPE_SHOULDER)
 						{
 							class_type = osi3::Lane_Classification_Type::Lane_Classification_Type_TYPE_DRIVING;
 						}
-						else if (lanetype == roadmanager::Lane::LaneType::LANE_TYPE_SPECIAL1 	||
-								lanetype == roadmanager::Lane::LaneType::LANE_TYPE_SPECIAL2 	||
-								lanetype == roadmanager::Lane::LaneType::LANE_TYPE_SPECIAL3 		 )
+						else if (lanetype == roadmanager::Lane::LaneType::LANE_TYPE_SPECIAL1 ||
+								 lanetype == roadmanager::Lane::LaneType::LANE_TYPE_SPECIAL2 ||
+								 lanetype == roadmanager::Lane::LaneType::LANE_TYPE_SPECIAL3)
 						{
 							class_type = osi3::Lane_Classification_Type::Lane_Classification_Type_TYPE_OTHER;
 						}
-						else if (lanetype == roadmanager::Lane::LaneType::LANE_TYPE_NONE )
+						else if (lanetype == roadmanager::Lane::LaneType::LANE_TYPE_NONE)
 						{
 							class_type = osi3::Lane_Classification_Type::Lane_Classification_Type_TYPE_UNKNOWN;
 						}
 						osi_lane->mutable_classification()->set_type(class_type);
 
-						
+						// //Get the predecessor and successor lanes
+						// roadmanager::Lane *predecessorLane = nullptr;
+						// roadmanager::Lane *successorLane = nullptr;
+						// printf("Debug in OSIReporter::UpdateOSIRoadLane: Lane ID: ((%i,%i) - %i)\n", road->GetId(), lane->GetId(), lane->GetGlobalId());
+						// if (predecessorRoad && lane->GetLink(LinkType::PREDECESSOR))
+						// {
+						// 	predecessorLane = predecessorRoad->GetDrivingLaneById(k, lane->GetLink(LinkType::PREDECESSOR)->GetId());
+						// 	osi_lane->mutable_classification()->add_lane_pairing()->mutable_antecessor_lane_id()->set_value(predecessorLane->GetGlobalId());
+						// 	printf("Debug in OSIReporter::UpdateOSIRoadLane: Predecessor Lane ID: ((%i,%i) - %i)\n", predecessorRoad->GetId(), predecessorLane->GetId(), predecessorLane->GetGlobalId());
+						// }
+						// if (successorRoad && lane->GetLink(LinkType::SUCCESSOR))
+						// {
+						// 	successorLane = successorRoad->GetDrivingLaneById(k, lane->GetLink(LinkType::SUCCESSOR)->GetId());
+						// 	osi_lane->mutable_classification()->add_lane_pairing()->mutable_successor_lane_id()->set_value(successorLane->GetGlobalId());
+						// 	printf("Debug in OSIReporter::UpdateOSIRoadLane: Successor Lane ID: ((%i,%i) - %i)\n", successorRoad->GetId(), successorLane->GetId(), successorLane->GetGlobalId());
+						// }
 
 						// CENTERLINE POINTS
 						int n_osi_points = lane->GetOSIPoints()->GetNumOfOSIPoints();
 						for (int jj = 0; jj < n_osi_points; jj++)
 						{
-							osi3::Vector3d* centerLine = osi_lane->mutable_classification()->add_centerline();
+							osi3::Vector3d *centerLine = osi_lane->mutable_classification()->add_centerline();
 							centerLine->set_x(lane->GetOSIPoints()->GetXfromIdx(jj));
 							centerLine->set_y(lane->GetOSIPoints()->GetYfromIdx(jj));
 							centerLine->set_z(lane->GetOSIPoints()->GetZfromIdx(jj));
@@ -1336,13 +1321,13 @@ int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
 						osi_lane->mutable_classification()->set_centerline_is_driving_direction(driving_direction);
 
 						//Get the predecessor and successor lanes
-						roadmanager::Lane* predecessorLane = nullptr;
-						roadmanager::Lane* successorLane = nullptr;
-						
-						if(predecessorRoad && lane->GetLink(LinkType::PREDECESSOR))
+						roadmanager::Lane *predecessorLane = nullptr;
+						roadmanager::Lane *successorLane = nullptr;
+
+						if (predecessorRoad && lane->GetLink(LinkType::PREDECESSOR))
 						{
 							predecessorLane = predecessorRoad->GetDrivingLaneById(k, lane->GetLink(LinkType::PREDECESSOR)->GetId());
-							if(predecessorLane)
+							if (predecessorLane)
 							{
 								if (driving_direction)
 								{
@@ -1354,10 +1339,10 @@ int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
 								}
 							}
 						}
-						if(successorRoad && lane->GetLink(LinkType::SUCCESSOR))
+						if (successorRoad && lane->GetLink(LinkType::SUCCESSOR))
 						{
 							successorLane = successorRoad->GetDrivingLaneById(k, lane->GetLink(LinkType::SUCCESSOR)->GetId());
-							if(successorLane)
+							if (successorLane)
 							{
 								if (driving_direction)
 								{
@@ -1370,34 +1355,32 @@ int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
 							}
 						}
 
-
 						// LEFT AND RIGHT LANE IDS
-						std::vector< std::pair <int,int> > globalid_ids_left;
-						std::vector< std::pair <int,int> > globalid_ids_right;
+						std::vector<std::pair<int, int>> globalid_ids_left;
+						std::vector<std::pair<int, int>> globalid_ids_right;
 
+						if (lane_section->IsOSILaneById(lane_id - (1 * driving_side)))
+						{
+							globalid_ids_right.push_back(std::make_pair(lane_id - (1 * driving_side), lane_section->GetLaneGlobalIdById(lane_id - (1 * driving_side))));
+						}
+						else if (lane_section->IsOSILaneById(lane_id - (2 * driving_side)))
+						{
+							globalid_ids_right.push_back(std::make_pair(lane_id - (2 * driving_side), lane_section->GetLaneGlobalIdById(lane_id - (2 * driving_side))));
+						}
 
-						if (lane_section->IsOSILaneById(lane_id-(1*driving_side)))
+						if (lane_section->IsOSILaneById(lane_id + (1 * driving_side)))
 						{
-							globalid_ids_right.push_back( std::make_pair(lane_id-(1*driving_side), lane_section->GetLaneGlobalIdById(lane_id-(1*driving_side)) ) );
+							globalid_ids_left.push_back(std::make_pair(lane_id + (1 * driving_side), lane_section->GetLaneGlobalIdById(lane_id + (1 * driving_side))));
 						}
-						else if (lane_section->IsOSILaneById(lane_id-(2*driving_side)))
+						else if (lane_section->IsOSILaneById(lane_id + (2 * driving_side)))
 						{
-							globalid_ids_right.push_back( std::make_pair(lane_id-(2*driving_side) , lane_section->GetLaneGlobalIdById(lane_id-(2*driving_side)) ) );
-						}
-
-						if (lane_section->IsOSILaneById(lane_id+(1*driving_side)))
-						{
-							globalid_ids_left.push_back( std::make_pair(lane_id+(1*driving_side) , lane_section->GetLaneGlobalIdById(lane_id+(1*driving_side)) ) );
-						}
-						else if (lane_section->IsOSILaneById(lane_id+(2*driving_side)))
-						{
-							globalid_ids_left.push_back( std::make_pair(lane_id+(2*driving_side) , lane_section->GetLaneGlobalIdById(lane_id+(2*driving_side)) ) );
+							globalid_ids_left.push_back(std::make_pair(lane_id + (2 * driving_side), lane_section->GetLaneGlobalIdById(lane_id + (2 * driving_side))));
 						}
 
 						// order global id with local id to maintain geographical order
 						std::sort(globalid_ids_left.begin(), globalid_ids_left.end());
 						std::sort(globalid_ids_right.begin(), globalid_ids_right.end());
-						if(driving_direction)
+						if (driving_direction)
 						{
 							std::reverse(globalid_ids_right.begin(), globalid_ids_right.end());
 						}
@@ -1406,20 +1389,16 @@ int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
 							std::reverse(globalid_ids_left.begin(), globalid_ids_left.end());
 						}
 
-
-
 						for (int jj = 0; jj < globalid_ids_left.size(); jj++)
 						{
-							osi3::Identifier* left_id = osi_lane->mutable_classification()->add_left_adjacent_lane_id();
+							osi3::Identifier *left_id = osi_lane->mutable_classification()->add_left_adjacent_lane_id();
 							left_id->set_value((uint64_t)globalid_ids_left[jj].second);
 						}
 						for (int jj = 0; jj < globalid_ids_right.size(); jj++)
 						{
-							osi3::Identifier* right_id = osi_lane->mutable_classification()->add_right_adjacent_lane_id();
+							osi3::Identifier *right_id = osi_lane->mutable_classification()->add_right_adjacent_lane_id();
 							right_id->set_value((uint64_t)globalid_ids_right[jj].second);
 						}
-
-
 
 						// LANE BOUNDARY IDS
 						if (lane_id == 0) // for central lane I use the laneboundary osi points as right and left boundary so that it can be used from both sides
@@ -1428,11 +1407,11 @@ int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
 							std::vector<int> line_ids = lane->GetLineGlobalIds();
 							if (!line_ids.empty()) // lane has RoadMarks
 							{
-								for (int jj = 0; jj < line_ids.size(); jj++ )
+								for (int jj = 0; jj < line_ids.size(); jj++)
 								{
-									osi3::Identifier* left_lane_bound_id = osi_lane->mutable_classification()->add_left_lane_boundary_id();
+									osi3::Identifier *left_lane_bound_id = osi_lane->mutable_classification()->add_left_lane_boundary_id();
 									left_lane_bound_id->set_value(line_ids[jj]);
-									osi3::Identifier* right_lane_bound_id = osi_lane->mutable_classification()->add_right_lane_boundary_id();
+									osi3::Identifier *right_lane_bound_id = osi_lane->mutable_classification()->add_right_lane_boundary_id();
 									right_lane_bound_id->set_value(line_ids[jj]);
 								}
 							}
@@ -1441,9 +1420,9 @@ int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
 								int laneboundary_global_id = lane->GetLaneBoundaryGlobalId();
 								if (laneboundary_global_id >= 0)
 								{
-									osi3::Identifier* left_lane_bound_id = osi_lane->mutable_classification()->add_left_lane_boundary_id();
+									osi3::Identifier *left_lane_bound_id = osi_lane->mutable_classification()->add_left_lane_boundary_id();
 									left_lane_bound_id->set_value(laneboundary_global_id);
-									osi3::Identifier* right_lane_bound_id = osi_lane->mutable_classification()->add_right_lane_boundary_id();
+									osi3::Identifier *right_lane_bound_id = osi_lane->mutable_classification()->add_right_lane_boundary_id();
 									right_lane_bound_id->set_value(laneboundary_global_id);
 								}
 							}
@@ -1454,16 +1433,16 @@ int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
 							std::vector<int> line_ids = lane->GetLineGlobalIds();
 							if (!line_ids.empty()) // lane has RoadMarks
 							{
-								for (int jj = 0; jj < line_ids.size(); jj++ )
+								for (int jj = 0; jj < line_ids.size(); jj++)
 								{
-									if (lane_id > 0 )
+									if (lane_id > 0)
 									{
-										osi3::Identifier* right_lane_bound_id = osi_lane->mutable_classification()->add_right_lane_boundary_id();
+										osi3::Identifier *right_lane_bound_id = osi_lane->mutable_classification()->add_right_lane_boundary_id();
 										right_lane_bound_id->set_value(line_ids[jj]);
 									}
-									if (lane_id < 0 )
+									if (lane_id < 0)
 									{
-										osi3::Identifier* right_lane_bound_id = osi_lane->mutable_classification()->add_right_lane_boundary_id();
+										osi3::Identifier *right_lane_bound_id = osi_lane->mutable_classification()->add_right_lane_boundary_id();
 										right_lane_bound_id->set_value(line_ids[jj]);
 									}
 								}
@@ -1473,12 +1452,12 @@ int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
 								int laneboundary_global_id = lane->GetLaneBoundaryGlobalId();
 								if (lane_id > 0 && laneboundary_global_id >= 0)
 								{
-									osi3::Identifier* right_lane_bound_id = osi_lane->mutable_classification()->add_right_lane_boundary_id();
+									osi3::Identifier *right_lane_bound_id = osi_lane->mutable_classification()->add_right_lane_boundary_id();
 									right_lane_bound_id->set_value(laneboundary_global_id);
 								}
 								if (lane_id < 0 && laneboundary_global_id >= 0)
 								{
-									osi3::Identifier* right_lane_bound_id = osi_lane->mutable_classification()->add_right_lane_boundary_id();
+									osi3::Identifier *right_lane_bound_id = osi_lane->mutable_classification()->add_right_lane_boundary_id();
 									right_lane_bound_id->set_value(laneboundary_global_id);
 								}
 							}
@@ -1487,27 +1466,27 @@ int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
 							int next_lane_id = 0;
 							if (lane_id < 0) // if lane is on the right, then it contains its right boundary. So I need to look into its left lane for the left boundary
 							{
-								next_lane_id = lane_id+1;
+								next_lane_id = lane_id + 1;
 							}
 							else if (lane_id > 0) // if lane is on the left, then it contains its left boundary. So I need to look into its right lane for the right boundary
 							{
-								next_lane_id = lane_id-1;
+								next_lane_id = lane_id - 1;
 							}
 							// look at right lane and check if it has Lines for RoadMarks
-							roadmanager::Lane* next_lane = lane_section->GetLaneById(next_lane_id);
+							roadmanager::Lane *next_lane = lane_section->GetLaneById(next_lane_id);
 							std::vector<int> nextlane_line_ids = next_lane->GetLineGlobalIds();
 							if (!nextlane_line_ids.empty())
 							{
-								for (int jj = 0; jj < nextlane_line_ids.size(); jj++ )
+								for (int jj = 0; jj < nextlane_line_ids.size(); jj++)
 								{
-									if (lane_id<0)
+									if (lane_id < 0)
 									{
-										osi3::Identifier* left_lane_bound_id = osi_lane->mutable_classification()->add_left_lane_boundary_id();
+										osi3::Identifier *left_lane_bound_id = osi_lane->mutable_classification()->add_left_lane_boundary_id();
 										left_lane_bound_id->set_value(nextlane_line_ids[jj]);
 									}
-									else if (lane_id>0)
+									else if (lane_id > 0)
 									{
-										osi3::Identifier* left_lane_bound_id = osi_lane->mutable_classification()->add_left_lane_boundary_id();
+										osi3::Identifier *left_lane_bound_id = osi_lane->mutable_classification()->add_left_lane_boundary_id();
 										left_lane_bound_id->set_value(nextlane_line_ids[jj]);
 									}
 								}
@@ -1517,17 +1496,16 @@ int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
 								int next_laneboundary_global_id = next_lane->GetLaneBoundaryGlobalId();
 								if (lane_id < 0 && next_laneboundary_global_id >= 0)
 								{
-									osi3::Identifier* left_lane_bound_id = osi_lane->mutable_classification()->add_left_lane_boundary_id();
+									osi3::Identifier *left_lane_bound_id = osi_lane->mutable_classification()->add_left_lane_boundary_id();
 									left_lane_bound_id->set_value(next_laneboundary_global_id);
 								}
 								if (lane_id > 0 && next_laneboundary_global_id >= 0)
 								{
-									osi3::Identifier* left_lane_bound_id = osi_lane->mutable_classification()->add_left_lane_boundary_id();
+									osi3::Identifier *left_lane_bound_id = osi_lane->mutable_classification()->add_left_lane_boundary_id();
 									left_lane_bound_id->set_value(next_laneboundary_global_id);
 								}
 							}
 						}
-
 
 						// STILL TO DO:
 						double temp = 0;
@@ -1548,7 +1526,7 @@ int OSIReporter::UpdateOSIRoadLane(std::vector<ObjectState*> objectState)
 	return 0;
 }
 
-const char* OSIReporter::GetOSIGroundTruth(int* size)
+const char *OSIReporter::GetOSIGroundTruth(int *size)
 {
 	if (!(GetSocket() || IsFileOpen()))
 	{
@@ -1560,12 +1538,12 @@ const char* OSIReporter::GetOSIGroundTruth(int* size)
 	return osiGroundTruth.ground_truth.data();
 }
 
-const char* OSIReporter::GetOSIGroundTruthRaw()
+const char *OSIReporter::GetOSIGroundTruthRaw()
 {
-	return (const char*) obj_osi_internal.gt;
+	return (const char *)obj_osi_internal.gt;
 }
 
-const char* OSIReporter::GetOSIRoadLane(std::vector<ObjectState*> objectState, int* size, int object_id)
+const char *OSIReporter::GetOSIRoadLane(std::vector<ObjectState *> objectState, int *size, int object_id)
 {
 	// Check if object_id exists
 	if (object_id >= objectState.size())
@@ -1577,7 +1555,7 @@ const char* OSIReporter::GetOSIRoadLane(std::vector<ObjectState*> objectState, i
 
 	// Find position of the object
 	roadmanager::Position pos;
-	for (size_t i = 0; i < objectState.size() ; i++)
+	for (size_t i = 0; i < objectState.size(); i++)
 	{
 		if (object_id == objectState[i]->state_.info.id)
 		{
@@ -1589,7 +1567,7 @@ const char* OSIReporter::GetOSIRoadLane(std::vector<ObjectState*> objectState, i
 	// find the lane in the sensor view and save its index in the sensor view
 	int lane_id_of_vehicle = pos.GetLaneGlobalId();
 	int idx = -1;
-	for (int i = 0; i<obj_osi_internal.ln.size(); i++)
+	for (int i = 0; i < obj_osi_internal.ln.size(); i++)
 	{
 		osi3::Identifier identifier = obj_osi_internal.ln[i]->id();
 		int found_id = (int)identifier.value();
@@ -1611,12 +1589,11 @@ const char* OSIReporter::GetOSIRoadLane(std::vector<ObjectState*> objectState, i
 	return osiRoadLane.osi_lane_info.data();
 }
 
-
-const char* OSIReporter::GetOSIRoadLaneBoundary(int* size, int global_id)
+const char *OSIReporter::GetOSIRoadLaneBoundary(int *size, int global_id)
 {
 	// find the lane bounday in the sensor view and save its index
 	int idx = -1;
-	for (int i = 0; i<obj_osi_internal.lnb.size(); i++)
+	for (int i = 0; i < obj_osi_internal.lnb.size(); i++)
 	{
 		osi3::Identifier identifier = obj_osi_internal.lnb[i]->id();
 		int found_id = (int)identifier.value();
@@ -1661,7 +1638,7 @@ bool OSIReporter::IsCentralOSILane(int lane_idx)
 int OSIReporter::GetLaneIdxfromIdOSI(int lane_id)
 {
 	int idx = -1;
-	for (int i = 0; i<obj_osi_internal.ln.size(); i++)
+	for (int i = 0; i < obj_osi_internal.ln.size(); i++)
 	{
 		osi3::Identifier identifier = obj_osi_internal.ln[i]->id();
 		int found_id = (int)identifier.value();
@@ -1674,7 +1651,7 @@ int OSIReporter::GetLaneIdxfromIdOSI(int lane_id)
 	return idx;
 }
 
-void OSIReporter::GetOSILaneBoundaryIds(std::vector<ObjectState*> objectState, std::vector<int> &ids, int object_id)
+void OSIReporter::GetOSILaneBoundaryIds(std::vector<ObjectState *> objectState, std::vector<int> &ids, int object_id)
 {
 	int idx_central, idx_left, idx_right;
 	int left_lb_id, right_lb_id;
@@ -1704,7 +1681,7 @@ void OSIReporter::GetOSILaneBoundaryIds(std::vector<ObjectState*> objectState, s
 	idx_central = GetLaneIdxfromIdOSI(lane_id_of_vehicle);
 
 	// find left and right lane boundary ids of central lane
-	if (obj_osi_internal.ln[idx_central]->mutable_classification()->left_lane_boundary_id_size() == 0 )
+	if (obj_osi_internal.ln[idx_central]->mutable_classification()->left_lane_boundary_id_size() == 0)
 	{
 		left_lb_id = -1;
 	}
@@ -1714,7 +1691,7 @@ void OSIReporter::GetOSILaneBoundaryIds(std::vector<ObjectState*> objectState, s
 		left_lb_id = (int)left_lane.value();
 	}
 
-	if (obj_osi_internal.ln[idx_central]->mutable_classification()->right_lane_boundary_id_size() == 0 )
+	if (obj_osi_internal.ln[idx_central]->mutable_classification()->right_lane_boundary_id_size() == 0)
 	{
 		right_lb_id = -1;
 	}
@@ -1725,7 +1702,7 @@ void OSIReporter::GetOSILaneBoundaryIds(std::vector<ObjectState*> objectState, s
 	}
 
 	// find first left lane
-	if (obj_osi_internal.ln[idx_central]->mutable_classification()->left_adjacent_lane_id_size() == 0 )
+	if (obj_osi_internal.ln[idx_central]->mutable_classification()->left_adjacent_lane_id_size() == 0)
 	{
 		far_left_lb_id = -1;
 	}
@@ -1737,7 +1714,7 @@ void OSIReporter::GetOSILaneBoundaryIds(std::vector<ObjectState*> objectState, s
 		idx_left = GetLaneIdxfromIdOSI(left_lane_id);
 
 		// save left boundary of left lane as far left lane boundary of central lane
-		if (obj_osi_internal.ln[idx_left]->mutable_classification()->left_lane_boundary_id_size() == 0 )
+		if (obj_osi_internal.ln[idx_left]->mutable_classification()->left_lane_boundary_id_size() == 0)
 		{
 			far_left_lb_id = -1;
 		}
@@ -1756,9 +1733,8 @@ void OSIReporter::GetOSILaneBoundaryIds(std::vector<ObjectState*> objectState, s
 		}
 	}
 
-
 	// now find first right lane
-	if (obj_osi_internal.ln[idx_central]->mutable_classification()->right_adjacent_lane_id_size() == 0 )
+	if (obj_osi_internal.ln[idx_central]->mutable_classification()->right_adjacent_lane_id_size() == 0)
 	{
 		far_right_lb_id = -1;
 	}
@@ -1769,7 +1745,7 @@ void OSIReporter::GetOSILaneBoundaryIds(std::vector<ObjectState*> objectState, s
 		idx_right = GetLaneIdxfromIdOSI(right_lane_id);
 
 		// save right boundary of right lane as far right lane boundary of central lane
-		if (obj_osi_internal.ln[idx_right]->mutable_classification()->right_lane_boundary_id_size() == 0 )
+		if (obj_osi_internal.ln[idx_right]->mutable_classification()->right_lane_boundary_id_size() == 0)
 		{
 			far_right_lb_id = -1;
 		}
@@ -1786,7 +1762,6 @@ void OSIReporter::GetOSILaneBoundaryIds(std::vector<ObjectState*> objectState, s
 				far_right_lb_id = (int)Far_right_lb_id.value();
 			}
 		}
-
 	}
 
 	// push all ids into output vector
@@ -1798,12 +1773,11 @@ void OSIReporter::GetOSILaneBoundaryIds(std::vector<ObjectState*> objectState, s
 	ids = final_lb_ids;
 
 	return;
-
 }
 
-const char* OSIReporter::GetOSISensorDataRaw()
+const char *OSIReporter::GetOSISensorDataRaw()
 {
-    return (const char*) obj_osi_internal.sd;
+	return (const char *)obj_osi_internal.sd;
 }
 
 int OSIReporter::SetOSITimeStampExplicit(unsigned long long int nanoseconds)
@@ -1812,4 +1786,3 @@ int OSIReporter::SetOSITimeStampExplicit(unsigned long long int nanoseconds)
 
 	return 0;
 }
-
