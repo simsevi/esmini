@@ -99,7 +99,7 @@ elif  [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "linux-gnu"* ]]; then
 
         if [[ "$OSTYPE" == "linux-gnu"* ]]; then
             cmake -G "${GENERATOR[@]}" ${GENERATOR_ARGUMENTS} -D CMAKE_INSTALL_PREFIX=../install -DCMAKE_BUILD_TYPE=Debug .. -DCMAKE_C_FLAGS="-fPIC" 
-            cmake --build . -j --target install
+            cmake --build . --target install
             mv ../install/lib/libz.a ../install/lib/libzd.a
 
             rm CMakeCache.txt
@@ -129,6 +129,7 @@ if [[ "$OSTYPE" == "linux-gnu"* ]] || [[ "$OSTYPE" == "darwin"* ]]; then
         else
             ./configure CFLAGS='-fPIC -g'; make -j
             mv .libs .libsd
+            mv .libsd/libjpeg.a .libsd/libjpegd.a
             make clean
             ./configure CFLAGS='-fPIC'; make -j
         fi
@@ -162,18 +163,19 @@ if [ ! -d OpenSceneGraph/build ]; then
     cd build
 
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        cmake ../ -DDYNAMIC_OPENSCENEGRAPH=false -DDYNAMIC_OPENTHREADS=false -DCMAKE_CXX_FLAGS=-fPIC -DJPEG_LIBRARY_RELEASE=../../jpeg-8d/.libs/libjpeg.a -DJPEG_INCLUDE_DIR=../../jpeg-8d -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install
+
+        cmake ../ -DDYNAMIC_OPENSCENEGRAPH=false -DDYNAMIC_OPENTHREADS=false -DCMAKE_CXX_FLAGS=-fPIC -DJPEG_LIBRARY_RELEASE=$osg_root_dir/jpeg-8d/.libs/libjpeg.a -DJPEG_LIBRARY=$osg_root_dir/jpeg-8d/.libs/libjpeg.a -DJPEG_INCLUDE_DIR=$osg_root_dir/jpeg-8d -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install
 
         make -j8 install
 
         rm CMakeCache.txt
-        
-        cmake ../ -DDYNAMIC_OPENSCENEGRAPH=false -DDYNAMIC_OPENTHREADS=false -DCMAKE_CXX_FLAGS=-fPIC -DJPEG_LIBRARY_RELEASE=../../jpeg-8d/.libs/libjpeg.a -DJPEG_INCLUDE_DIR=../../jpeg-8d -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../install-debug
+
+        cmake ../ -DDYNAMIC_OPENSCENEGRAPH=false -DDYNAMIC_OPENTHREADS=false -DCMAKE_CXX_FLAGS=-fPIC -DJPEG_LIBRARY_RELEASE=$osg_root_dir/jpeg-8d/.libsd/libjpegd.a -DJPEG_LIBRARY=$osg_root_dir/jpeg-8d/.libsd/libjpegd.a -DJPEG_INCLUDE_DIR=$osg_root_dir/jpeg-8d -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../install-debug
 
         make -j8 install
     
     elif [[ "$OSTYPE" == "darwin"* ]]; then
-        cmake ../ -DDYNAMIC_OPENSCENEGRAPH=false -DDYNAMIC_OPENTHREADS=false -DJPEG_LIBRARY_RELEASE=../../jpeg-8d/.libs/libjpeg.a -DJPEG_INCLUDE_DIR=../../jpeg-8d -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-fPIC -DCMAKE_INSTALL_PREFIX=../install
+        cmake ../ -DDYNAMIC_OPENSCENEGRAPH=false -DDYNAMIC_OPENTHREADS=false -DJPEG_LIBRARY_RELEASE=$osg_root_dir/jpeg-8d/.libs/libjpeg.a -DJPEG_INCLUDE_DIR=$osg_root_dir/jpeg-8d -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-fPIC -DCMAKE_INSTALL_PREFIX=../install
 
         cmake --build . -j 16 --config Release --target install
 
@@ -203,7 +205,7 @@ if [ "$OSTYPE" == "msys" ]; then
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     target_dir="linux"
     zfilename="osg_linux.7z"
-    z_exe=7z
+    z_exe=7za
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     target_dir="mac"
     zfilename="osg_mac.7z"
@@ -228,6 +230,8 @@ then
     elif [[ "$OSTYPE" == "linux-gnu"* ]] || [[ "$OSTYPE" == "darwin"* ]]; then
         cp zlib-1.2.11/install/include/zlib.h $target_dir/include
         cp zlib-1.2.11/install/lib/libz.${LIB_EXT} zlib-1.2.11/install/lib/libzd.${LIB_EXT} $target_dir/lib
+        cp jpeg-8d/jpeglib.h $target_dir/include
+        cp jpeg-8d/.libs/libjpeg.${LIB_EXT} jpeg-8d/.libsd/libjpegd.${LIB_EXT} $target_dir/lib
     else
         echo Unknown OSTYPE: $OSTYPE
     fi
