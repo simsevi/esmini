@@ -34,6 +34,7 @@ namespace scenarioengine
 		float speed;
 		float wheel_angle; // Only used for vehicle
 		float wheel_rot; // Only used for vehicle
+		float axle_distance;
 		OSCBoundingBox boundingbox;
 		int scaleMode; // 0=None, 1=BoundingBoxToModel, 2=ModelToBoundingBox (see enum EntityScaleMode)
 	};

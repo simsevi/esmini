@@ -333,6 +333,19 @@ namespace scenarioengine
 			TRAM = 8
 		} Category;
 
+		typedef struct AxleProperty
+		{
+			double maxSteering = 0.0;
+			double wheelDiameter = 0.0;
+			double trackWidth = 0.0;
+			double positionX = 0.0;
+			double positionY = 0.0;
+			double positionZ = 0.0;
+		};
+
+		AxleProperty front_axle;
+		AxleProperty rear_axle;
+
 		Vehicle() : Object(Object::Type::VEHICLE)
 		{
 			category_ = static_cast<int>(Category::CAR);
