@@ -35,8 +35,8 @@ add_executable ( ${TARGET1} ${SOURCES} ${INCLUDES} )
 target_link_libraries (
 	${TARGET1}
 	RoadManager
+  ViewerBase
 	ScenarioEngine
-	ViewerBase
 	CommonMini
 	${OSG_LIBRARIES}
 	${TIME_LIB}

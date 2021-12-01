@@ -260,7 +260,11 @@ void ScenarioPlayer::ViewerFrame()
 	// Ask Environment for fog pos and dim
 	// Tell viewer to move and scale fog bounding box
 	// viewer_->UpdateFog(scenarioEngine->environment_->GetFogCenter...)
-
+	if (scenarioEngine->environment.IsEnvironment()) 
+	{
+		
+		viewer_->CreateWeatherGroup(&scenarioEngine->environment);
+	}
 	mutex.Lock();
 
 	// remove deleted cars

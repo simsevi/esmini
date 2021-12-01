@@ -431,6 +431,7 @@ namespace viewer
 		PolyLine* AddPolyLine(osg::Group* parent, osg::ref_ptr<osg::Vec3Array> points, osg::Vec4 color, double width, double dotsize=0);
 		void CaptureNextFrame();
 		void CaptureContinuously(bool state);
+		int CreateWeatherGroup(scenarioengine::OSCEnvironment* environment);
 
 	private:
 
@@ -438,7 +439,7 @@ namespace viewer
 		bool CreateRoadMarkLines(roadmanager::OpenDrive* od);
 		int CreateOutlineObject(roadmanager::Outline* outline);
 		int CreateFogBoundingBox(osg::PositionAttitudeTransform* parent);
-		int CreateWeatherGroup();
+		int CreateFog(double range);
 		int UpdateTimeOfDay(double intensity);
 		osg::ref_ptr<osg::PositionAttitudeTransform> LoadRoadFeature(roadmanager::Road* road, std::string filename);
 		int CreateRoadSignsAndObjects(roadmanager::OpenDrive* od);

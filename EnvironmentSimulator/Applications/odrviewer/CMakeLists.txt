@@ -30,6 +30,7 @@ target_link_libraries (
 	${TARGET}
 	RoadManager
 	ViewerBase
+  ScenarioEngine
 	CommonMini
 	${OSG_LIBRARIES}
 	${TIME_LIB}
