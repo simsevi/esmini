@@ -107,10 +107,7 @@ namespace scenarioengine
 	public:
 		OSCEnvironment new_environment_;
 
-		EnvironmentAction() : OSCGlobalAction(OSCGlobalAction::Type::ENVIRONMENT) 
-		{
-			new_environment_ = OSCEnvironment();
-		};
+		EnvironmentAction() : OSCGlobalAction(OSCGlobalAction::Type::ENVIRONMENT) {};
 
 		EnvironmentAction(const EnvironmentAction& action) : OSCGlobalAction(OSCGlobalAction::Type::ENVIRONMENT)
 		{
