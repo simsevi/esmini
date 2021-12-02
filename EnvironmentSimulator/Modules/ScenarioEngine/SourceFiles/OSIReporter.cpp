@@ -1032,7 +1032,6 @@ int OSIReporter::UpdateOSIIntersection()
 			}
 		}
 	}
-
 	return 0;
 }
 

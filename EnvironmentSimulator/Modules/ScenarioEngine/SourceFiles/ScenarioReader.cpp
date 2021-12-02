@@ -1646,7 +1646,7 @@ OSCGlobalAction *ScenarioReader::parseOSCGlobalAction(pugi::xml_node actionNode)
 	{
 		throw std::runtime_error("Missing action child node");
 	}
-
+	LOG("Parsing OSC GlobalAction with node %s", actionNode.name());
 	for (pugi::xml_node actionChild = actionNode.first_child(); actionChild; actionChild = actionChild.next_sibling())
 	{
 		if (actionChild.name() == std::string("ParameterAction"))
@@ -2568,7 +2568,7 @@ void ScenarioReader::parseInit(Init &init)
 	for (pugi::xml_node actionsChild = actionsNode.first_child(); actionsChild; actionsChild = actionsChild.next_sibling())
 	{
 		std::string actionsChildName(actionsChild.name());
-
+	
 		if (actionsChildName == "GlobalAction")
 		{
 			LOG("Parsing global action %s", parameters.ReadAttribute(actionsChild, "name").c_str());
@@ -3506,7 +3506,7 @@ static int selectCloudState(scenarioengine::CloudState &state, const std::string
 	std::map<std::string, CloudState> stateMap
 	{
 		{"cloudless", CloudState::CLOUDLESS},
-		{"sunne", CloudState::SUNNE},
+		{"sunne", CloudState::SUNNY},
 		{"serene", CloudState::SERENE},
 		{"slightly_cloudy", CloudState::SLIGHTLY_CLOUDY},
 		{"light_cloudy", CloudState::LIGHT_CLOUDY},
