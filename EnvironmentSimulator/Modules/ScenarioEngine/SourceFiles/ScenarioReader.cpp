@@ -1671,11 +1671,12 @@ OSCGlobalAction *ScenarioReader::parseOSCGlobalAction(pugi::xml_node actionNode)
 		}
 		else if (actionChild.name() == std::string("EnvironmentAction"))
 		{
-			OSCEnvironment *oscEnv = ParseOSCEnvironment(actionChild.child("Environment"));
+			EnvironmentAction *envAction = new EnvironmentAction();
+			OSCEnvironment *oscEnv = ParseOSCEnvironment(actionChild.child("Environment"),&envAction->new_environment_);
+			LOG("Parsing OSC Environment with node %s", actionChild.name());
 			if (oscEnv != nullptr)
 			{
-				EnvironmentAction *envAction = new EnvironmentAction();
-				envAction->SetEnvironment(oscEnv);
+				envAction->SetEnvironment(environment_);
 				action = envAction;
 			}
 			else
@@ -3526,10 +3527,8 @@ static int selectCloudState(scenarioengine::CloudState &state, const std::string
 	return 1;
 }
 
-OSCEnvironment* ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node)
+OSCEnvironment* ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvironment* env)
 {
-	OSCEnvironment *env = new OSCEnvironment();
-
 	for (pugi::xml_node envChild : xml_node.children())
 	{
 		std::string envChildName(envChild.name());
@@ -3580,10 +3579,10 @@ OSCEnvironment* ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_no
 
 					env->SetSun(std::stof(azimuth),std::stof(elevation),std::stof(intensity));
 				}
-				else if (weatherChildName == "fog")
+				else if (weatherChildName == "Fog")
 				{
 					std::string visualRange = parameters.ReadAttribute(weatherChild, "visualRange");
-					if(weatherChild.child("boundingBox") != NULL)
+					if(weatherChild.child("BoundingBox") != NULL)
 					{
 						OSCBoundingBox bb;
 						ParseOSCBoundingBox(bb, weatherChild);

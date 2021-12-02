@@ -128,7 +128,6 @@ namespace scenarioengine
 		void Start(double simTime, double dt);
 		void Step(double simTime, double dt);
 		void SetEnvironment(OSCEnvironment* environment) {environment_ = environment;}
-
 		void print()
 		{
 			LOG("");
