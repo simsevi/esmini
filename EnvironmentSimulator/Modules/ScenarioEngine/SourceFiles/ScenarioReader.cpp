@@ -1672,17 +1672,11 @@ OSCGlobalAction *ScenarioReader::parseOSCGlobalAction(pugi::xml_node actionNode)
 		else if (actionChild.name() == std::string("EnvironmentAction"))
 		{
 			EnvironmentAction *envAction = new EnvironmentAction();
-			OSCEnvironment *oscEnv = ParseOSCEnvironment(actionChild.child("Environment"),&envAction->new_environment_);
+			ParseOSCEnvironment(actionChild.child("Environment"),&envAction->new_environment_);
+			envAction->SetEnvironment(environment_);
 			LOG("Parsing OSC Environment with node %s", actionChild.name());
-			if (oscEnv != nullptr)
-			{
-				envAction->SetEnvironment(environment_);
-				action = envAction;
-			}
-			else
-			{
-				LOG("Error parsing OSC Environment with node %s", actionChild.name());
-			}
+
+			action = envAction;
 		}
 		else if (actionChild.name() == std::string("TrafficAction"))
 		{
@@ -3527,7 +3521,7 @@ static int selectCloudState(scenarioengine::CloudState &state, const std::string
 	return 1;
 }
 
-OSCEnvironment* ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvironment* env)
+void ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvironment* env)
 {
 	for (pugi::xml_node envChild : xml_node.children())
 	{
@@ -3634,6 +3628,4 @@ OSCEnvironment* ScenarioReader::ParseOSCEnvironment(const pugi::xml_node &xml_no
 			LOG("Not valid environment attribute name:%s", envChildName.c_str());
 		}
 	}
-
-	return env;
 }

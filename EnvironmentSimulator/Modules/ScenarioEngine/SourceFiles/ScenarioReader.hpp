@@ -168,7 +168,7 @@ namespace scenarioengine
 		Object* ResolveObjectReference(std::string name);
 
 		// Environment
-		OSCEnvironment* ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvironment* new_env);
+		void ParseOSCEnvironment(const pugi::xml_node &xml_node, OSCEnvironment* new_env);
 	};
 
 }
