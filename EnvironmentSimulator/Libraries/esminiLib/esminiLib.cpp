@@ -1128,11 +1128,23 @@ extern "C"
 		return player->scenarioGateway->getNumberOfObjects();
 	}
 
-	SE_DLL_API int SE_GetObjectState(int index, SE_ScenarioObjectState *state)
+	SE_DLL_API int SE_GetId(int index)
 	{
-		if (player != nullptr && index >= 0 && index < player->scenarioGateway->getNumberOfObjects())
+		if (player == nullptr || index < player->scenarioGateway->getNumberOfObjects())
 		{
-			copyStateFromScenarioGateway(state, &player->scenarioGateway->getObjectStatePtrByIdx(index)->state_);
+			return -1;
+		}
+
+		return player->scenarioGateway->getObjectStatePtrByIdx(index)->state_.info.id;
+	}	
+
+	SE_DLL_API int SE_GetObjectState(int object_id, SE_ScenarioObjectState *state)
+	{
+		
+		scenarioengine::ObjectState obj_state;
+		if (player->scenarioGateway->getObjectStateById(object_id, obj_state) != -1)
+		{
+			copyStateFromScenarioGateway(state, &obj_state.state_);
 			return 0;
 		}
 
@@ -1149,37 +1161,53 @@ extern "C"
 		return -1;
 	}
 
-	SE_DLL_API const char* SE_GetObjectTypeName(int index)
+	SE_DLL_API const char* SE_GetObjectTypeName(int object_id)
 	{
 		static std::string returnString;
-		if (player != nullptr && index >= 0 && index < player->scenarioGateway->getNumberOfObjects())
+		Object* object;
+		if (player != nullptr)
 		{
-			returnString = player->scenarioEngine->entities_.object_[index]->GetTypeName();
-			return returnString.c_str();
+			object = player->scenarioEngine->entities_.GetObjectById(object_id);
+			if (object != nullptr);
+			{
+				
+				returnString = object->GetTypeName();
+				return returnString.c_str();
+			}
+		}
+		
+		return 0;
+	}
+
+	SE_DLL_API const char *SE_GetObjectName(int object_id)
+	{
+		static std::string returnString;
+		Object* object;
+		if (player != nullptr)
+		{
+			object = player->scenarioEngine->entities_.GetObjectById(object_id);
+			if (object != nullptr);
+			{
+				returnString = object->name_;
+				return returnString.c_str();
+			}
 		}
 
 		return 0;
 	}
 
-	SE_DLL_API const char *SE_GetObjectName(int index)
+	SE_DLL_API const char* SE_GetObjectModelFileName(int object_id)
 	{
 		static std::string returnString;
-		if (player != nullptr && index >= 0 && index < player->scenarioGateway->getNumberOfObjects())
+		Object* object;
+		if (player != nullptr)
 		{
-			returnString = player->scenarioGateway->getObjectStatePtrByIdx(index)->state_.info.name;
-			return returnString.c_str();
-		}
-
-		return 0;
-	}
-
-	SE_DLL_API const char* SE_GetObjectModelFileName(int index)
-	{
-		static std::string returnString;
-		if (player != nullptr && index >= 0 && index < player->scenarioGateway->getNumberOfObjects())
-		{
-			returnString = player->scenarioEngine->entities_.object_[index]->GetModelFileName();
-			return returnString.c_str();
+			object = player->scenarioEngine->entities_.GetObjectById(object_id);
+			if (object != nullptr);
+			{
+				returnString = object->GetModelFileName();
+				return returnString.c_str();
+			}
 		}
 
 		return 0;

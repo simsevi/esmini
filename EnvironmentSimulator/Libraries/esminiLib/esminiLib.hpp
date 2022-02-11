@@ -635,12 +635,19 @@ extern "C"
 	SE_DLL_API int SE_GetNumberOfObjects();
 
 	/**
-		Get the state of specified object
+		Get the Id of an entity present in the current scenario
 		@param index Index of the object. Note: not ID
+		@return Id of the object, -1 on error e.g. scenario not initialized
+	*/
+	SE_DLL_API int SE_GetId(int index);
+
+	/**
+		Get the state of specified object
+		@param object_id Id of the object.
 		@param state Pointer/reference to a SE_ScenarioObjectState struct to be filled in
 		@return 0 if successful, -1 if not
 	*/
-	SE_DLL_API int SE_GetObjectState(int index, SE_ScenarioObjectState *state);
+	SE_DLL_API int SE_GetObjectState(int object_id, SE_ScenarioObjectState *state);
 
 	/**
 		Get the overrideActionStatus of specified object
@@ -652,24 +659,24 @@ extern "C"
 
 	/**
 		Get the type name of the specifed vehicle-, pedestrian- or misc object
-		@param index Index of the object. Note: not ID
+		@param object_id Id of the object. 
 		@return Name
 	*/
-	SE_DLL_API const char* SE_GetObjectTypeName(int index);
+	SE_DLL_API const char* SE_GetObjectTypeName(int object_id);
 
 	/**
 		Get the name of specified object
-		@param index Index of the object. Note: not ID
+		@param object_id Id of the object. 
 		@return Name
 	*/
-	SE_DLL_API const char *SE_GetObjectName(int index);
+	SE_DLL_API const char *SE_GetObjectName(int object_id);
 
 	/**
 		Get the 3D model filename of the specifed object
-		@param index Index of the object. Note: not ID
+		@param object_id Id of the object. 
 		@return Name
 	*/
-	SE_DLL_API const char* SE_GetObjectModelFileName(int index);
+	SE_DLL_API const char* SE_GetObjectModelFileName(int object_id);
 
 	/**
 		Check whether an object has a ghost (special purpose lead vehicle)
