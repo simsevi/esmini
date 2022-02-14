@@ -140,7 +140,7 @@ static void copyStateFromScenarioGateway(SE_ScenarioObjectState *state, ObjectSt
 	state->objectCategory = gw_state->info.obj_category;
 }
 
-static int getObjectById(int object_id, Object *obj)
+static int getObjectById(int object_id, Object** obj)
 {
 	if (player == nullptr)
 	{
@@ -148,8 +148,8 @@ static int getObjectById(int object_id, Object *obj)
 	}
 	else
 	{
-		obj = player->scenarioEngine->entities_.GetObjectById(object_id);
-		if (obj == nullptr)
+		*obj = player->scenarioEngine->entities_.GetObjectById(object_id);
+		if (*obj == nullptr)
 		{
 			LOG("Invalid object_id (%d)", object_id);
 			return -1;
@@ -184,7 +184,7 @@ static int GetRoadInfoAtDistance(int object_id, float lookahead_distance, SE_Roa
 {
 	roadmanager::RoadProbeInfo s_data;
 	Object* main_object;
-	if (getObjectById(object_id,main_object) == -1)
+	if (getObjectById(object_id,&main_object) == -1)
 	{
 		return -1;
 	}
@@ -251,7 +251,7 @@ static int GetRoadInfoAlongGhostTrail(int object_id, float lookahead_distance, S
 	roadmanager::RoadProbeInfo s_data;
 
 	Object* obj;
-	if (getObjectById(object_id,obj) == -1)
+	if (getObjectById(object_id,&obj) == -1)
 	{
 		return -1;
 	}
@@ -323,7 +323,7 @@ static int GetRoadInfoAtGhostTrailTime(int object_id, float time, SE_RoadInfo* r
 	roadmanager::RoadProbeInfo s_data;
 
 	Object* obj;
-	if (getObjectById(object_id,obj) == -1)
+	if (getObjectById(object_id,&obj) == -1)
 	{
 		return -1;
 	}		
@@ -869,7 +869,7 @@ extern "C"
 	SE_DLL_API int SE_ReportObjectPos(int object_id, float timestamp, float x, float y, float z, float h, float p, float r, float speed)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}
@@ -884,7 +884,7 @@ extern "C"
 	SE_DLL_API int SE_ReportObjectPosXYH(int object_id, float timestamp, float x, float y, float h, float speed)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}
@@ -898,7 +898,7 @@ extern "C"
 	SE_DLL_API int SE_ReportObjectRoadPos(int object_id, float timestamp, int roadId, int laneId, float laneOffset, float s, float speed)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}
@@ -912,7 +912,7 @@ extern "C"
 	SE_DLL_API int SE_ReportObjectSpeed(int object_id, float speed)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}
@@ -926,7 +926,7 @@ extern "C"
 	SE_DLL_API int SE_ReportObjectLateralPosition(int object_id, float t)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}
@@ -941,7 +941,7 @@ extern "C"
 	SE_DLL_API int SE_ReportObjectLateralLanePosition(int object_id, int laneId, float laneOffset)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}
@@ -956,7 +956,7 @@ extern "C"
 	SE_DLL_API int SE_ReportObjectVel(int object_id, float timestamp, float x_vel, float y_vel, float z_vel)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}
@@ -971,7 +971,7 @@ extern "C"
 	SE_DLL_API int SE_ReportObjectAngularVel(int object_id, float timestamp, float h_rate, float p_rate, float r_rate)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}
@@ -985,7 +985,7 @@ extern "C"
 	SE_DLL_API int SE_ReportObjectAcc(int object_id, float timestamp, float x_acc, float y_acc, float z_acc)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}
@@ -999,7 +999,7 @@ extern "C"
 	SE_DLL_API int SE_ReportObjectAngularAcc(int object_id, float timestamp, float h_acc, float p_acc, float r_acc)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}
@@ -1067,7 +1067,7 @@ extern "C"
 	SE_DLL_API int SE_GetOverrideActionStatus(int object_id, SE_OverrideActionList *list)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}	
@@ -1082,7 +1082,7 @@ extern "C"
 	{
 		static std::string returnString;
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return 0;
 		}	
@@ -1095,7 +1095,7 @@ extern "C"
 	{
 		static std::string returnString;
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return 0;
 		}	
@@ -1108,7 +1108,7 @@ extern "C"
 	{
 		static std::string returnString;
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return 0;
 		}	
@@ -1321,7 +1321,7 @@ extern "C"
 	SE_DLL_API int SE_ObjectHasGhost(int object_id)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return 0;
 		}	
@@ -1339,7 +1339,7 @@ extern "C"
 	{
 		Object *ghost = 0;
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}	
@@ -1415,7 +1415,7 @@ extern "C"
 	SE_DLL_API int SE_AddObjectSensor(int object_id, float x, float y, float z, float h, float rangeNear, float rangeFar, float fovH, int maxObj)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}	
@@ -1429,7 +1429,7 @@ extern "C"
 	SE_DLL_API int SE_ViewSensorData(int object_id)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}	
@@ -1483,7 +1483,7 @@ extern "C"
 	SE_DLL_API int SE_GetRoadInfoAtDistance(int object_id, float lookahead_distance, SE_RoadInfo *data, int lookAheadMode, bool inRoadDrivingDirection)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}
@@ -1510,7 +1510,7 @@ extern "C"
 	SE_DLL_API int SE_GetRoadInfoAlongGhostTrail(int object_id, float lookahead_distance, SE_RoadInfo *data, float *speed_ghost)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}
@@ -1526,7 +1526,7 @@ extern "C"
 	SE_DLL_API int SE_GetRoadInfoGhostTrailTime(int object_id, float time, SE_RoadInfo* data, float* speed_ghost)
 	{
 		Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}
@@ -1869,7 +1869,7 @@ extern "C"
 SE_DLL_API int SE_GetNumberOfRoutePoints(int object_id)
 {
 	Object* obj;
-		if (getObjectById(object_id,obj) == -1)
+		if (getObjectById(object_id,&obj) == -1)
 		{
 			return -1;
 		}
@@ -1887,7 +1887,7 @@ SE_DLL_API int SE_GetNumberOfRoutePoints(int object_id)
 SE_DLL_API int SE_GetRoutePoint(int object_id, int route_index, SE_RouteInfo *routeinfo)
 {
 	Object* obj;
-	if (getObjectById(object_id,obj) == -1)
+	if (getObjectById(object_id,&obj) == -1)
 	{
 		return -1;
 	}
